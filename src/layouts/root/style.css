@@ -1,0 +1,11 @@
+.root-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Segoe UI', 'Arial', sans-serif;
+}
+
+.root-main {
+  flex: 1;
+  padding: 2rem;
+}

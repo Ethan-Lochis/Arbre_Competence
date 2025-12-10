@@ -1,0 +1,14 @@
+<div>
+  <h1 class="svg-demo1-title">
+    Exemple SVG avec chargement/style dynamiques lues depuis un json
+  </h1>
+    <section class="svg-demo1-container">
+    <slot name="svg"></slot>
+     <p>
+      Il n'y a qu'un seul composant SVG (star) mais il est instancié autant de fois dans la page qu'il y a d'éléments dans le fichier json.
+      Chaque instance est stylée dynamiquement en fonction des données lues dans le json (couleur, taille, échelle).
+      Le composant SVG possède des méthodes pour faciliter le stylage dynamique.
+      Par ailleurs chaque étoile est cliquable et déclenche une animation GSAP définie au niveau de la page. 
+      </p>
+  </section>
+</div>

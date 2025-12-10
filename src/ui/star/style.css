@@ -1,0 +1,7 @@
+.star-svg {
+ 
+}
+
+.star-svg polygon {
+  pointer-events: none;
+}
