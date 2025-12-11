@@ -19,9 +19,13 @@
   --color-red-500: #ef4444;
 
   /* Semantics Tokens*/
-  --color-bg: var(--color-neutral-100);
   --color-fg: var(--color-neutral-900);
   --color-primary: var(--color-blue-500);
   --color-success: var(--color-green-500);
   --color-danger: var(--color-red-500);
+  --color-bg: oklch(0.255 0.1445 262.28);
+}
+
+body{
+  background-color: var(--color-bg);
 }

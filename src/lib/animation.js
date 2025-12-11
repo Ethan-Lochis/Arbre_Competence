@@ -4,15 +4,24 @@ gsap.registerPlugin(DrawSVGPlugin);
 
 let Animation = {};
 
-Animation.rotateElement = function (element, duration = 1) {
+Animation.rotateElement = function (element, duration = 1, angle = 360) {
   gsap.to(element, {
-    rotation: "+=360",
-    transformOrigin: "50% 50%",
-    repeat: -1,
-    ease: "linear",
+    rotation: "+=" + angle,
+    transformOrigin: "100% 0%",
+    repeat: 0,
+    ease: "expo.inOut",
     duration: duration,
   });
 };
+Animation.counterRotateElement = function ( element, duration = 1, angle = -360) {
+  gsap.to(element, {
+    rotation: "+=" + angle,
+    transformOrigin: "50% 50%",
+    repeat: 0,
+    ease: "expo.inOut",
+    duration: duration,
+  });
+}
 
 Animation.colorTransition = function (
   element,
