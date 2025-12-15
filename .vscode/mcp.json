@@ -1,0 +1,9 @@
+{
+	"servers": {
+		"my-mcp-server-99d691e9": {
+			"url": "https://mcp.context7.com/mcp",
+			"type": "http"
+		}
+	},
+	"inputs": []
+}

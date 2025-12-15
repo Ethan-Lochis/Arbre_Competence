@@ -56,3 +56,58 @@
 #close-info:hover {
   color: #333;
 }
+
+/* Contrôles de niveau */
+.niveau-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.niveau-btn {
+  flex: 1;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.niveau-btn span {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.add-btn {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.add-btn:hover {
+  background-color: #45a049;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+}
+
+.remove-btn {
+  background-color: #f44336;
+  color: white;
+}
+
+.remove-btn:hover {
+  background-color: #da190b;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(244, 67, 54, 0.3);
+}
+
+.niveau-btn:active {
+  transform: translateY(0);
+}
