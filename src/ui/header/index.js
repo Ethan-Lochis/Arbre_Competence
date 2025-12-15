@@ -1,4 +1,5 @@
 import { htmlToDOM  } from "../../lib/utils.js";
+import { Animation } from "../../lib/animation.js";
 import template from "./template.html?raw";
 
 // HeaderView est un composant statique
@@ -11,6 +12,14 @@ let HeaderView = {
 
   dom: function () {
     return htmlToDOM(template);
+  },
+
+  init: function () {
+    // Initialiser l'animation de hide/show au scroll
+    const headerElement = document.querySelector(".header");
+    if (headerElement) {
+      Animation.hideHeaderOnScroll(headerElement);
+    }
   }
 };
 

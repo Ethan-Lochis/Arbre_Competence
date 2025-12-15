@@ -25,5 +25,11 @@ export function RootLayout() {
     let footer = FooterView.dom();
     layout.querySelector('slot[name="header"]').replaceWith(header);
     layout.querySelector('slot[name="footer"]').replaceWith(footer);
+    
+    // Initialiser l'animation du header après le premier render
+    setTimeout(() => {
+        HeaderView.init();
+    }, 0);
+    
     return layout;
 }

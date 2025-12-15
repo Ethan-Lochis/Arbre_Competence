@@ -1,0 +1,4 @@
+/* Style pour tous les éléments AC (ApprentissageCritique) */
+[id^="AC"] {
+  cursor: pointer;
+}

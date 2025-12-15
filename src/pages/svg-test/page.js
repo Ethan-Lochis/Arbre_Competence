@@ -1,53 +1,218 @@
 import { treeView } from "@/ui/Test";
+import { InfosView } from "@/ui/Infos/index.js";
 import { htmlToDOM } from "@/lib/utils.js";
 import template from "./template.html?raw";
-
 import { Animation } from "@/lib/animation.js";
 
-let M = {};
+// ============================================================================
+// MODÈLE (M) - Gestion des données
+// ============================================================================
+let M = {
+  data: null,
+  levels: {}, // Stockage des niveaux uniquement { "AC11.01": 3, "AC12.05": 2, ... }
+  currentAC: null,
+  currentCompetenceId: null,
+  currentNiveauIndex: null,
+};
 
-// Charge les données depuis localStorage ou depuis le fichier JSON
-const savedData = localStorage.getItem("SAE_data");
-if (savedData) {
-  console.log("Chargement des données depuis localStorage");
-  M.data = JSON.parse(savedData);
-} else {
+// Initialisation des données
+M.init = async function () {
+  // Charge toujours les données complètes depuis le JSON
   console.log("Chargement des données depuis SAE.json");
   let response = await fetch("/src/data/SAE.json");
   M.data = await response.json();
-}
 
-// Fonction pour sauvegarder dans localStorage
-M.saveData = function () {
-  localStorage.setItem("SAE_data", JSON.stringify(M.data));
-  console.log("Données sauvegardées dans localStorage");
+  // Charge les niveaux depuis localStorage
+  const savedLevels = localStorage.getItem("SAE_levels");
+  if (savedLevels) {
+    console.log("Chargement des niveaux depuis localStorage");
+    M.levels = JSON.parse(savedLevels);
+    
+    // Applique les niveaux sauvegardés aux ACs
+    for (let competenceId in M.data) {
+      let competence = M.data[competenceId];
+      competence.niveaux?.forEach((niveau) => {
+        niveau.acs?.forEach((ac) => {
+          if (M.levels[ac.code] !== undefined) {
+            ac.level = M.levels[ac.code];
+          }
+        });
+      });
+    }
+  }
 };
 
+// Sauvegarde uniquement les niveaux
+M.saveData = function () {
+  // Extrait uniquement les niveaux depuis M.data
+  M.levels = {};
+  for (let competenceId in M.data) {
+    let competence = M.data[competenceId];
+    competence.niveaux?.forEach((niveau) => {
+      niveau.acs?.forEach((ac) => {
+        if (ac.level !== undefined && ac.level > 0) {
+          M.levels[ac.code] = ac.level;
+        }
+      });
+    });
+  }
+  
+  localStorage.setItem("SAE_levels", JSON.stringify(M.levels));
+  console.log("Niveaux sauvegardés dans localStorage:", M.levels);
+};
+
+// Recherche d'une AC par son code
+M.findACByCode = function (acCode) {
+  for (let competenceId in M.data) {
+    let competence = M.data[competenceId];
+    for (
+      let niveauIndex = 0;
+      niveauIndex < (competence.niveaux?.length || 0);
+      niveauIndex++
+    ) {
+      let niveau = competence.niveaux[niveauIndex];
+      for (let ac of niveau.acs || []) {
+        if (ac.code === acCode) {
+          return {
+            ac,
+            competenceId,
+            niveauIndex,
+          };
+        }
+      }
+    }
+  }
+  return null;
+};
+
+// Ajoute un niveau à une AC
+M.addLevel = function (ac) {
+  if (ac.level === undefined) {
+    ac.level = 0;
+  }
+  if (ac.level < 5) {
+    ac.level++;
+    M.saveData();
+    return true;
+  }
+  return false;
+};
+
+// Retire un niveau à une AC
+M.removeLevel = function (ac) {
+  if (ac.level === undefined) {
+    ac.level = 0;
+  }
+  if (ac.level > 0) {
+    ac.level--;
+    M.saveData();
+    return true;
+  }
+  return false;
+};
+
+// Convertit AC1101 en AC11.01
+M.convertSVGIdToACCode = function (svgId) {
+  return svgId.replace(/^(AC\d{2})(\d{2})$/, "$1.$2");
+};
+
+// Convertit AC11.01 en AC1101
+M.convertACCodeToSVGId = function (acCode) {
+  return acCode.replace(".", "");
+};
+
+// ============================================================================
+// CONTRÔLEUR (C) - Logique métier et handlers
+// ============================================================================
 let C = {};
 
-C.init = function () {
+C.init = async function () {
+  await M.init();
   return V.init();
 };
 
+C.handleACClick = function (acId, clientX, clientY) {
+  const acCode = M.convertSVGIdToACCode(acId);
+  console.log(`Clic détecté sur ${acId} → ${acCode}`);
+
+  const result = M.findACByCode(acCode);
+  if (!result) {
+    console.warn(`AC ${acCode} non trouvée dans les données`);
+    return;
+  }
+
+  // Stocke les références dans le modèle
+  M.currentAC = result.ac;
+  M.currentCompetenceId = result.competenceId;
+  M.currentNiveauIndex = result.niveauIndex;
+
+  // Met à jour la vue
+  V.showACInfo(result.ac, clientX, clientY);
+};
+
+C.handleClosePanel = function () {
+  V.hideACInfo();
+};
+
+C.handleAddLevel = function () {
+  if (!M.currentAC) {
+    console.error("Aucune AC sélectionnée");
+    return;
+  }
+
+  const success = M.addLevel(M.currentAC);
+  if (success) {
+    console.log(
+      `Niveau ajouté ! ${M.currentAC.code} est maintenant au niveau ${M.currentAC.level}`,
+    );
+    V.updateLevel(M.currentAC.level);
+  } else {
+    console.log("Le niveau maximal (5) est atteint");
+  }
+};
+
+C.handleRemoveLevel = function () {
+  if (!M.currentAC) {
+    console.error("Aucune AC sélectionnée");
+    return;
+  }
+
+  const success = M.removeLevel(M.currentAC);
+  if (success) {
+    console.log(
+      `Niveau retiré ! ${M.currentAC.code} est maintenant au niveau ${M.currentAC.level}`,
+    );
+    V.updateLevel(M.currentAC.level);
+  } else {
+    console.log("Le niveau est déjà à 0");
+  }
+};
+
+// ============================================================================
+// VUE (V) - Gestion de l'affichage et des événements DOM
+// ============================================================================
 let V = {
   rootPage: null,
   tree: null,
+  infoPanel: null,
 };
 
 V.init = function () {
   V.rootPage = htmlToDOM(template);
   V.tree = new treeView();
-
-  // Animation ouverture des branches
+  V.infoPanel = new InfosView();
 
   // Insère le SVG dans la page
   let svgSlot = V.rootPage.querySelector('slot[name="svg"]');
   svgSlot.replaceWith(V.tree.dom());
 
+  let infoPanel = V.rootPage.querySelector('slot[name="info"]');
+  infoPanel.replaceWith(V.infoPanel.dom());
+
   // Lance l'animation d'ouverture
   V.tree.openingAnimation();
 
-  // Attache les événements APRÈS l'insertion
+  // Attache les événements
   V.attachEvents();
 
   return V.rootPage;
@@ -56,182 +221,82 @@ V.init = function () {
 V.attachEvents = function () {
   console.log("Attachement des événements...");
 
-  // Trouve le SVG dans la page
-  let svg = V.rootPage.querySelector("svg");
+  const svg = V.rootPage.querySelector("svg");
   if (!svg) {
     console.error("SVG non trouvé dans V.rootPage!");
     return;
   }
-  // Gestion de l'info bulle au clique 
-  for (let competenceId in M.data) {
-    let competence = M.data[competenceId];
-    // Parcourt toutes les compétences dans M.data
 
-    // Parcourt tous les niveaux
-    competence.niveaux?.forEach((niveau, niveauIndex) => {
-      // Parcourt toutes les ACs
-      niveau.acs?.forEach((ac) => {
-        // Convertit AC11.01 en AC1101 pour matcher le nom du composant SVG
-        let acCode = ac.code.replace(".", ""); // "AC11.01" -> "AC1101"
-        // Cherche dans le SVG (acCode contient déjà "AC")
-        let acElement = svg.querySelector("#" + acCode);
+  // Event delegation sur le SVG
+  svg.addEventListener("click", (ev) => {
+    const acId = V.findACIdFromTarget(ev.target, svg);
+    if (acId) {
+      C.handleACClick(acId, ev.clientX, ev.clientY);
+    } else {
+      console.log("Clic en dehors d'une AC");
+    }
+  });
 
-        // Debug
-        console.log(
-          `AC ${ac.code} (#${acCode}):`,
-          acElement ? "Trouvé ✓" : "NON TROUVÉ ✗",
-        );
-
-        if (acElement) {
-          acElement.style.cursor = "pointer";
-          acElement.addEventListener("click", (e) => {
-            e.stopPropagation();
-            console.log(`Clic détecté sur ${ac.code}`);
-
-            // Stocke les références pour les boutons
-            V.currentAC = ac;
-            V.currentCompetenceId = competenceId;
-            V.currentNiveauIndex = niveauIndex;
-
-            // Affiche le libellé dans le panneau
-            let panel = V.rootPage.querySelector("#info-panel");
-            let codeEl = V.rootPage.querySelector("#info-code");
-            let libelleEl = V.rootPage.querySelector("#info-libelle");
-            let levelEl = V.rootPage.querySelector("#info-level");
-
-            if (panel && codeEl && libelleEl && levelEl) {
-              codeEl.textContent = ac.code;
-              libelleEl.textContent = ac.libelle;
-              levelEl.textContent = ac.level !== undefined ? ac.level : 0;
-
-              // Positionne le panneau aux coordonnées du clic
-              const x = e.clientX;
-              const y = e.clientY;
-
-              // Ajuste la position pour que le panneau ne sorte pas de l'écran
-              const panelWidth = 400; // max-width du panneau
-              const panelHeight = 250; // hauteur estimée
-              const margin = 20;
-
-              let left = x + margin;
-              let top = y + margin;
-
-              // Si le panneau dépasse à droite, le place à gauche du clic
-              if (left + panelWidth > window.innerWidth) {
-                left = x - panelWidth - margin;
-              }
-
-              // Si le panneau dépasse en bas, le place au-dessus du clic
-              if (top + panelHeight > window.innerHeight) {
-                top = y - panelHeight - margin;
-              }
-
-              // S'assure que le panneau ne sort pas par la gauche ou le haut
-              left = Math.max(margin, left);
-              top = Math.max(margin, top);
-
-              panel.style.left = left + "px";
-              panel.style.top = top + "px";
-              panel.style.right = "auto"; // Désactive la position right fixe
-              panel.style.display = "block";
-            }
-          });
-        }
-      });
-    });
-  }
-
-  // Ferme le panneau au clic sur le bouton
-  let closeBtn = V.rootPage.querySelector("#close-info");
+  // Bouton fermer
+  const closeBtn = V.rootPage.querySelector("#close-info");
   if (closeBtn) {
-    closeBtn.addEventListener("click", () => {
-      V.rootPage.querySelector("#info-panel").style.display = "none";
-    });
+    closeBtn.addEventListener("click", () => C.handleClosePanel());
   }
 
-  // Bouton pour ajouter un niveau
-  let addNiveauBtn = V.rootPage.querySelector("#add-niveau");
+  // Bouton ajouter niveau
+  const addNiveauBtn = V.rootPage.querySelector("#add-niveau");
   if (addNiveauBtn) {
-    addNiveauBtn.addEventListener("click", () => {
-      if (
-        !V.currentAC ||
-        !V.currentCompetenceId ||
-        V.currentNiveauIndex === null
-      ) {
-        console.error("Aucune AC sélectionnée");
-        return;
-      }
-
-      // Initialise level à 0 s'il n'existe pas
-      if (V.currentAC.level === undefined) {
-        V.currentAC.level = 0;
-      }
-
-      // Incrémente le niveau (max 5)
-      if (V.currentAC.level < 5) {
-        V.currentAC.level++;
-        console.log(
-          `Niveau ajouté ! ${V.currentAC.code} est maintenant au niveau ${V.currentAC.level}`,
-        );
-        console.log("AC mise à jour:", V.currentAC);
-
-        // Met à jour l'affichage du level
-        let levelEl = V.rootPage.querySelector("#info-level");
-        if (levelEl) {
-          levelEl.textContent = V.currentAC.level;
-        }
-
-        // Sauvegarde dans localStorage
-        M.saveData();
-      } else {
-        console.log("Le niveau maximal (5) est atteint");
-      }
-    });
+    addNiveauBtn.addEventListener("click", () => C.handleAddLevel());
   }
 
-  // Bouton pour retirer un niveau
-  let removeNiveauBtn = V.rootPage.querySelector("#remove-niveau");
+  // Bouton retirer niveau
+  const removeNiveauBtn = V.rootPage.querySelector("#remove-niveau");
   if (removeNiveauBtn) {
-    removeNiveauBtn.addEventListener("click", () => {
-      if (
-        !V.currentAC ||
-        !V.currentCompetenceId ||
-        V.currentNiveauIndex === null
-      ) {
-        console.error("Aucune AC sélectionnée");
-        return;
+    removeNiveauBtn.addEventListener("click", () => C.handleRemoveLevel());
+  }
+};
+
+V.findACIdFromTarget = function (target, svg) {
+  while (target && target !== svg) {
+    if (target.id && target.id.startsWith("AC")) {
+      // Extrait uniquement la partie AC + 4 chiffres (ex: AC1106 depuis AC1106__Content)
+      const match = target.id.match(/^(AC\d{4})/);
+      if (match) {
+        return match[1];
       }
+    }
+    target = target.parentElement;
+  }
+  return null;
+};
 
-      // Initialise level à 0 s'il n'existe pas
-      if (V.currentAC.level === undefined) {
-        V.currentAC.level = 0;
-      }
+V.showACInfo = function (ac, clientX, clientY) {
+  const panel = V.rootPage.querySelector("#info-panel");
+  const panelH3 = V.rootPage.querySelector("#info-code");
+  const descriptionPanel = V.rootPage.querySelector("#info-libelle");
+  const levelAC = V.rootPage.querySelector("#info-level");
 
-      // Décrémente le niveau (ne descend pas en dessous de 0)
-      if (V.currentAC.level > 0) {
-        V.currentAC.level--;
-        console.log(
-          `Niveau retiré ! ${V.currentAC.code} est maintenant au niveau ${V.currentAC.level}`,
-        );
-        console.log("AC mise à jour:", V.currentAC);
+  if (panel && panelH3 && descriptionPanel && levelAC) {
+    panelH3.textContent = ac.code;
+    descriptionPanel.textContent = ac.libelle;
+    levelAC.textContent = ac.level !== undefined ? ac.level : 0;
 
-        // Met à jour l'affichage du level
-        let levelEl = V.rootPage.querySelector("#info-level");
-        if (levelEl) {
-          levelEl.textContent = V.currentAC.level;
-        }
+    Animation.showInfoPanel(panel, clientX, clientY);
+  }
+};
 
-        // Sauvegarde dans localStorage
-        M.saveData();
-      } else {
-        console.log("Le niveau est déjà à 0");
-      }
-    });
+V.hideACInfo = function () {
+  const panel = V.rootPage.querySelector("#info-panel");
+  Animation.hideInfoPanel(panel);
+};
+
+V.updateLevel = function (level) {
+  const levelAC = V.rootPage.querySelector("#info-level");
+  if (levelAC) {
+    levelAC.textContent = level;
   }
 };
 
 export function SVGtest() {
-  // Format pour cibler une AC dans le json/M.data
-  console.log(M.data["688548e4666873aa7a49491ba88a7271"].niveaux[0].acs[0]);
   return C.init();
 }

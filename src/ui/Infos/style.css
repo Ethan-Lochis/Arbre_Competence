@@ -1,0 +1,22 @@
+.info-panel {
+  display: none;
+  position: fixed;
+  background: white;
+  padding: 1.25rem;
+  border-radius: .5rem;
+  box-shadow: 0 .25rem .375rem rgba(0, 0, 0, 0.1);
+  width: 25rem;
+  z-index: 1000;
+  opacity: 0;
+  transform: scale(0.9);
+  pointer-events: none;
+}
+
+.info-panel.visible {
+  display: block;
+  pointer-events: auto;
+}
+
+.info-level {
+  color: var(--color-fg);
+}

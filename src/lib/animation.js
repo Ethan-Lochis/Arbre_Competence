@@ -92,5 +92,156 @@ Animation.bounce = function (element, duration = 1, height = 100) {
   });
 };
 
+/**
+ * Anime l'ouverture des branches d'un arbre de compétences
+ * @param {Function} getAC - Fonction pour récupérer un élément AC par son code
+ * @param {Function} getACContent - Fonction pour récupérer le contenu d'un élément AC par son code
+ */
+Animation.openBranches = function (getAC, getACContent) {
+  const branches = [
+    { code: "150", angle: 82, step: 12 },
+    { code: "140", angle: 159, step: 13 },
+    { code: "130", angle: 230, step: 12 },
+    { code: "120", angle: 278, step: 12 },
+    { code: "110", angle: 351, step: 12 },
+  ];
+
+  for (let i = 1; i < 8; i++) {
+    branches.forEach(({ code, angle, step }) => {
+      const ac = getAC(code + i);
+      const content = getACContent(code + i);
+
+      if (ac) Animation.rotateElement(ac, 4, angle - i * step);
+      if (content) {
+        const contentStep = code === "140" ? step + 0.5 : step;
+        Animation.counterRotateElement(content, 4, -angle + i * contentStep);
+      }
+    });
+  }
+};
+
+/**
+ * Cache le header lors du scroll vers le bas et le fait réapparaître lors du scroll vers le haut
+ * @param {HTMLElement} headerElement - L'élément header à animer
+ * @param {number} threshold - Distance minimale de scroll avant activation (en pixels)
+ */
+Animation.hideHeaderOnScroll = function (headerElement, threshold = 5) {
+  let lastScrollY = window.scrollY;
+  let ticking = false;
+
+  const updateHeader = () => {
+    const currentScrollY = window.scrollY;
+
+    // Ne rien faire si on est tout en haut
+    if (currentScrollY < 10) {
+      gsap.to(headerElement, {
+        y: 0,
+        duration: 0.3,
+        ease: "power2.out",
+      });
+      lastScrollY = currentScrollY;
+      ticking = false;
+      return;
+    }
+
+    // Scroll vers le bas - cacher le header
+    if (currentScrollY > lastScrollY && currentScrollY > threshold) {
+      gsap.to(headerElement, {
+        y: -100,
+        duration: 0.3,
+        ease: "power2.in",
+      });
+    }
+    // Scroll vers le haut - montrer le header
+    else if (currentScrollY < lastScrollY) {
+      gsap.to(headerElement, {
+        y: 0,
+        duration: 0.3,
+        ease: "power2.out",
+      });
+    }
+
+    lastScrollY = currentScrollY;
+    ticking = false;
+  };
+
+  const onScroll = () => {
+    if (!ticking) {
+      window.requestAnimationFrame(updateHeader);
+      ticking = true;
+    }
+  };
+
+  window.addEventListener("scroll", onScroll, { passive: true });
+
+  // Retourner une fonction de nettoyage
+  return () => {
+    window.removeEventListener("scroll", onScroll);
+  };
+};
+
+/**
+ * Anime l'apparition du panneau d'informations
+ * @param {HTMLElement} panelElement - L'élément panneau à afficher
+ * @param {number} x - Position X pour le panneau
+ * @param {number} y - Position Y pour le panneau
+ */
+Animation.showInfoPanel = function (panelElement, x = null, y = null) {
+  // Positionne le panneau si les coordonnées sont fournies
+  if (x !== null && y !== null) {
+    const panelWidth = 400;
+    const panelHeight = 250;
+    const margin = 20;
+
+    let left = x + margin;
+    let top = y + margin;
+
+    if (left + panelWidth > window.innerWidth) {
+      left = x - panelWidth - margin;
+    }
+
+    if (top + panelHeight > window.innerHeight) {
+      top = y - panelHeight - margin;
+    }
+
+    left = Math.max(margin, left);
+    top = Math.max(margin, top);
+
+    panelElement.style.left = left + "px";
+    panelElement.style.top = top + "px";
+    panelElement.style.right = "auto";
+  }
+
+  // Ajoute la classe visible pour display: block
+  panelElement.classList.add("visible");
+
+  // Anime l'apparition
+  gsap.to(panelElement, {
+    opacity: 1,
+    scale: 1,
+    duration: 0.3,
+    ease: "back.out(1.7)",
+  });
+};
+
+/**
+ * Anime la disparition du panneau d'informations
+ * @param {HTMLElement} panelElement - L'élément panneau à masquer
+ */
+Animation.hideInfoPanel = function (panelElement) {
+  gsap.to(panelElement, {
+    opacity: 0,
+    scale: 0.9,
+    duration: 0.2,
+    ease: "power2.in",
+    onComplete: () => {
+      panelElement.classList.remove("visible");
+    },
+  });
+
+
+  
+};
+
 
 export { Animation };
