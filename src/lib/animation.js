@@ -13,7 +13,11 @@ Animation.rotateElement = function (element, duration = 1, angle = 360) {
     duration: duration,
   });
 };
-Animation.counterRotateElement = function ( element, duration = 1, angle = -360) {
+Animation.counterRotateElement = function (
+  element,
+  duration = 1,
+  angle = -360,
+) {
   gsap.to(element, {
     rotation: "+=" + angle,
     transformOrigin: "50% 50%",
@@ -21,25 +25,77 @@ Animation.counterRotateElement = function ( element, duration = 1, angle = -360)
     ease: "expo.inOut",
     duration: duration,
   });
-}
+};
 
-Animation.colorTransition = function (
-  element,
-  fromColor,
-  toColor,
-  duration = 1,
-) {
+Animation.colorTransition = function (element, newColor, duration = 0.4) {
+  if (!element) {
+    console.warn("Animation.transitionACColor: élément null");
+    return;
+  }
+
+  // 1. Lisez la couleur actuelle de l'élément AVANT l'animation
+  const currentColor = window.getComputedStyle(element).fill;
+
+  gsap.fromTo(element, 
+    // FROM (état de départ)
+    { fill: currentColor },
+    // TO (état d'arrivée)
+    { 
+      fill: newColor,
+      duration: duration,
+      ease: "power2.out",
+    }
+  );
+};
+
+/**
+ * Anime la couleur de fond d'un élément SVG (transition unique)
+ * @param {Element} element - L'élément SVG à animer
+ * @param {string} newColor - La nouvelle couleur (CSS variable ou valeur)
+ * @param {number} duration - Durée de la transition en secondes
+ */
+Animation.transitionACColor = function (element, newColor, duration = 0.4) {
+  if (!element) {
+    console.warn("Animation.transitionACColor: élément null");
+    return;
+  }
+
+  // 1. Lisez la couleur actuelle de l'élément AVANT l'animation
+  const currentColor = window.getComputedStyle(element).fill;
+
   gsap.fromTo(
     element,
-    { fill: fromColor },
+    // FROM (état de départ)
+    { fill: currentColor },
+    // TO (état d'arrivée)
     {
-      fill: toColor,
+      fill: newColor,
       duration: duration,
-      repeat: -1,
-      yoyo: true,
-      ease: "linear",
+      ease: "power2.out",
     },
   );
+};
+
+/**
+ * Anime la couleur de stroke des éléments SVG (transition unique)
+ * @param {NodeList|Array} elements - Les éléments SVG à animer
+ * @param {string} newColor - La nouvelle couleur du stroke
+ * @param {number} duration - Durée de la transition en secondes
+ */
+Animation.transitionStrokeColor = function (
+  elements,
+  newColor,
+  duration = 0.4,
+) {
+  if (!elements || elements.length === 0) {
+    return;
+  }
+
+  gsap.to(elements, {
+    stroke: newColor,
+    duration: duration,
+    ease: "power2.out",
+  });
 };
 
 Animation.stretchElement = function (
@@ -238,10 +294,6 @@ Animation.hideInfoPanel = function (panelElement) {
       panelElement.classList.remove("visible");
     },
   });
-
-
-  
 };
-
 
 export { Animation };
