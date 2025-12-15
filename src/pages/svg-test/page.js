@@ -5,9 +5,23 @@ import template from "./template.html?raw";
 import { Animation } from "@/lib/animation.js";
 
 let M = {};
-let response = await fetch("/src/data/SAE.json");
-M.data = await response.json();
-M.data["688548e4666873aa7a49491ba88a7271"].niveaux[0].acs[0].level = 2;
+
+// Charge les données depuis localStorage ou depuis le fichier JSON
+const savedData = localStorage.getItem("SAE_data");
+if (savedData) {
+  console.log("Chargement des données depuis localStorage");
+  M.data = JSON.parse(savedData);
+} else {
+  console.log("Chargement des données depuis SAE.json");
+  let response = await fetch("/src/data/SAE.json");
+  M.data = await response.json();
+}
+
+// Fonction pour sauvegarder dans localStorage
+M.saveData = function () {
+  localStorage.setItem("SAE_data", JSON.stringify(M.data));
+  console.log("Données sauvegardées dans localStorage");
+};
 
 let C = {};
 
@@ -48,7 +62,7 @@ V.attachEvents = function () {
     console.error("SVG non trouvé dans V.rootPage!");
     return;
   }
-
+  // Gestion de l'info bulle au clique 
   for (let competenceId in M.data) {
     let competence = M.data[competenceId];
     // Parcourt toutes les compétences dans M.data
@@ -68,7 +82,6 @@ V.attachEvents = function () {
           acElement ? "Trouvé ✓" : "NON TROUVÉ ✗",
         );
 
-
         if (acElement) {
           acElement.style.cursor = "pointer";
           acElement.addEventListener("click", (e) => {
@@ -84,10 +97,12 @@ V.attachEvents = function () {
             let panel = V.rootPage.querySelector("#info-panel");
             let codeEl = V.rootPage.querySelector("#info-code");
             let libelleEl = V.rootPage.querySelector("#info-libelle");
+            let levelEl = V.rootPage.querySelector("#info-level");
 
-            if (panel && codeEl && libelleEl) {
+            if (panel && codeEl && libelleEl && levelEl) {
               codeEl.textContent = ac.code;
               libelleEl.textContent = ac.libelle;
+              levelEl.textContent = ac.level !== undefined ? ac.level : 0;
 
               // Positionne le panneau aux coordonnées du clic
               const x = e.clientX;
@@ -138,7 +153,11 @@ V.attachEvents = function () {
   let addNiveauBtn = V.rootPage.querySelector("#add-niveau");
   if (addNiveauBtn) {
     addNiveauBtn.addEventListener("click", () => {
-      if (!V.currentAC || !V.currentCompetenceId || V.currentNiveauIndex === null) {
+      if (
+        !V.currentAC ||
+        !V.currentCompetenceId ||
+        V.currentNiveauIndex === null
+      ) {
         console.error("Aucune AC sélectionnée");
         return;
       }
@@ -151,8 +170,19 @@ V.attachEvents = function () {
       // Incrémente le niveau (max 5)
       if (V.currentAC.level < 5) {
         V.currentAC.level++;
-        console.log(`Niveau ajouté ! ${V.currentAC.code} est maintenant au niveau ${V.currentAC.level}`);
+        console.log(
+          `Niveau ajouté ! ${V.currentAC.code} est maintenant au niveau ${V.currentAC.level}`,
+        );
         console.log("AC mise à jour:", V.currentAC);
+
+        // Met à jour l'affichage du level
+        let levelEl = V.rootPage.querySelector("#info-level");
+        if (levelEl) {
+          levelEl.textContent = V.currentAC.level;
+        }
+
+        // Sauvegarde dans localStorage
+        M.saveData();
       } else {
         console.log("Le niveau maximal (5) est atteint");
       }
@@ -163,7 +193,11 @@ V.attachEvents = function () {
   let removeNiveauBtn = V.rootPage.querySelector("#remove-niveau");
   if (removeNiveauBtn) {
     removeNiveauBtn.addEventListener("click", () => {
-      if (!V.currentAC || !V.currentCompetenceId || V.currentNiveauIndex === null) {
+      if (
+        !V.currentAC ||
+        !V.currentCompetenceId ||
+        V.currentNiveauIndex === null
+      ) {
         console.error("Aucune AC sélectionnée");
         return;
       }
@@ -176,8 +210,19 @@ V.attachEvents = function () {
       // Décrémente le niveau (ne descend pas en dessous de 0)
       if (V.currentAC.level > 0) {
         V.currentAC.level--;
-        console.log(`Niveau retiré ! ${V.currentAC.code} est maintenant au niveau ${V.currentAC.level}`);
+        console.log(
+          `Niveau retiré ! ${V.currentAC.code} est maintenant au niveau ${V.currentAC.level}`,
+        );
         console.log("AC mise à jour:", V.currentAC);
+
+        // Met à jour l'affichage du level
+        let levelEl = V.rootPage.querySelector("#info-level");
+        if (levelEl) {
+          levelEl.textContent = V.currentAC.level;
+        }
+
+        // Sauvegarde dans localStorage
+        M.saveData();
       } else {
         console.log("Le niveau est déjà à 0");
       }

@@ -26,14 +26,34 @@
 
 #info-panel h3 {
   margin: 0 0 10px 0;
-  color: #333;
+  color: var(--color-fg-dark);
   font-size: 1.2rem;
 }
 
 #info-panel p {
   margin: 0;
-  color: #666;
+  color: var(--color-fg-secondary);
   line-height: 1.5;
+}
+
+/* Affichage du niveau */
+.info-level {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: var(--color-bg-panel);
+  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  color: var(--color-fg-secondary);
+}
+
+.info-level strong {
+  color: var(--color-fg);
+}
+
+.info-level span {
+  color: var(--color-primary);
+  font-size: 1.1rem;
+  font-weight: bold;
 }
 
 #close-info {
@@ -44,7 +64,7 @@
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: #999;
+  color: var(--color-fg-tertiary);
   padding: 0;
   width: 30px;
   height: 30px;
@@ -54,7 +74,7 @@
 }
 
 #close-info:hover {
-  color: #333;
+  color: var(--color-fg);
 }
 
 /* Contrôles de niveau */
@@ -63,7 +83,7 @@
   gap: 10px;
   margin-top: 20px;
   padding-top: 15px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--color-border);
 }
 
 .niveau-btn {
@@ -87,25 +107,25 @@
 }
 
 .add-btn {
-  background-color: #4CAF50;
-  color: white;
+  background-color: var(--color-add);
+  color: var(--color-fg);
 }
 
 .add-btn:hover {
-  background-color: #45a049;
+  background-color: var(--color-add-hover);
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .remove-btn {
-  background-color: #f44336;
-  color: white;
+  background-color: var(--color-remove);
+  color: var(--color-fg);
 }
 
 .remove-btn:hover {
-  background-color: #da190b;
+  background-color: var(--color-remove-hover);
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(244, 67, 54, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .niveau-btn:active {

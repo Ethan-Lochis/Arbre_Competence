@@ -12,20 +12,45 @@
 @import "./pages/svg-test/style.css";
 
 :root {
-  /* Primitives Tokens */
-  --color-neutral-100: #ffffff;
-  --color-neutral-900: #1a1a1a;
-  --color-blue-500: #3b82f6;
-  --color-green-500: #10b981;
-  --color-red-500: #ef4444;
+  /* ======================================================================== */
+  /* 🌌 FOND & NEUTRES (Base sombre pour l'environnement "Jeu Vidéo") */
+  /* ======================================================================== */
+  
+  /* Fond : Bleu foncé très peu saturé (gardé à peu près comme l'original) */
+  --color-bg: oklch(0.255 0.1445 262.28);; /* Bleu nuit profond */
+  --color-bg-panel: oklch(18.602% 0.09268 262.898);; /* Pour les panneaux d'info/cartes plus sombres que le fond */
+  --color-bg-light: oklch(42.946% 0.25575 264.115);; /* Pour les panneaux ou éléments de jour (si nécessaire) */
+  
+  /* Texte et Éléments Neutres */
+  --color-fg: oklch(0.95 0.02 265);      /* Texte principal (Blanc cassé légèrement bleuté) */
+  --color-fg-dark: oklch(0.20 0.05 265); /* Texte sombre pour fonds clairs */
+  --color-fg-secondary: oklch(54.358% 0.01392 259.881); /* Texte secondaire / Icônes */
+  --color-fg-tertiary: oklch(0.40 0.05 265); /* Bordures / Lignes de grille (Luminosité moyenne) */
+  
+  --color-border: var(--color-fg-tertiary);
+  --color-border-accent: oklch(0.60 0.08 265); /* Bordure un peu plus vive pour la séparation */
 
-  /* Semantics Tokens*/
-  --color-fg: var(--color-neutral-900);
-  --color-primary: var(--color-blue-500);
-  --color-success: var(--color-green-500);
-  --color-danger: var(--color-red-500);
-  --color-bg: oklch(0.255 0.1445 262.28);
+  /* ======================================================================== */
+  /* 📢 SEMANTICS TOKENS (État de progression) */
+  /* ======================================================================== */
+
+  /* Progression / Principal (Peut être utilisé pour les liens ou l'état "OK") */
+  --color-primary: var(--color-comp-4); /* Utilise la couleur du Développement comme standard */
+
+  /* Bouton : Ajouter un niveau (Vert) */
+  --color-add: oklch(0.75 0.12 140);
+  --color-add-hover: oklch(0.65 0.15 140);
+  
+  /* Bouton : Retirer un niveau (Rouge) */
+  --color-remove: oklch(0.75 0.12 25);
+  --color-remove-hover: oklch(0.65 0.15 25);
+  
+  /* État : En Cours / Partiel (Jaune/Orange pour l'attention) */
+  --color-warning: oklch(0.75 0.12 85);
+  --color-warning-hover: oklch(0.65 0.15 85);
 }
+
+
 
 body{
   background-color: var(--color-bg);
