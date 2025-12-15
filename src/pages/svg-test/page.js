@@ -7,6 +7,7 @@ import { Animation } from "@/lib/animation.js";
 let M = {};
 let response = await fetch("/src/data/SAE.json");
 M.data = await response.json();
+M.data["688548e4666873aa7a49491ba88a7271"].niveaux[0].acs[0].level = 2;
 
 let C = {};
 
@@ -48,15 +49,12 @@ V.attachEvents = function () {
     return;
   }
 
-  console.log("SVG trouvé:", svg);
-  console.log("Données chargées:", Object.keys(M.data).length, "compétences");
-
-  // Parcourt toutes les compétences dans M.data
   for (let competenceId in M.data) {
     let competence = M.data[competenceId];
+    // Parcourt toutes les compétences dans M.data
 
     // Parcourt tous les niveaux
-    competence.niveaux?.forEach((niveau) => {
+    competence.niveaux?.forEach((niveau, niveauIndex) => {
       // Parcourt toutes les ACs
       niveau.acs?.forEach((ac) => {
         // Convertit AC11.01 en AC1101 pour matcher le nom du composant SVG
@@ -64,16 +62,23 @@ V.attachEvents = function () {
         // Cherche dans le SVG (acCode contient déjà "AC")
         let acElement = svg.querySelector("#" + acCode);
 
+        // Debug
         console.log(
           `AC ${ac.code} (#${acCode}):`,
           acElement ? "Trouvé ✓" : "NON TROUVÉ ✗",
         );
+
 
         if (acElement) {
           acElement.style.cursor = "pointer";
           acElement.addEventListener("click", (e) => {
             e.stopPropagation();
             console.log(`Clic détecté sur ${ac.code}`);
+
+            // Stocke les références pour les boutons
+            V.currentAC = ac;
+            V.currentCompetenceId = competenceId;
+            V.currentNiveauIndex = niveauIndex;
 
             // Affiche le libellé dans le panneau
             let panel = V.rootPage.querySelector("#info-panel");
@@ -133,8 +138,24 @@ V.attachEvents = function () {
   let addNiveauBtn = V.rootPage.querySelector("#add-niveau");
   if (addNiveauBtn) {
     addNiveauBtn.addEventListener("click", () => {
-      console.log("Ajouter un niveau");
-      // TODO: Implémenter la logique d'ajout de niveau
+      if (!V.currentAC || !V.currentCompetenceId || V.currentNiveauIndex === null) {
+        console.error("Aucune AC sélectionnée");
+        return;
+      }
+
+      // Initialise level à 0 s'il n'existe pas
+      if (V.currentAC.level === undefined) {
+        V.currentAC.level = 0;
+      }
+
+      // Incrémente le niveau (max 5)
+      if (V.currentAC.level < 5) {
+        V.currentAC.level++;
+        console.log(`Niveau ajouté ! ${V.currentAC.code} est maintenant au niveau ${V.currentAC.level}`);
+        console.log("AC mise à jour:", V.currentAC);
+      } else {
+        console.log("Le niveau maximal (5) est atteint");
+      }
     });
   }
 
@@ -142,12 +163,30 @@ V.attachEvents = function () {
   let removeNiveauBtn = V.rootPage.querySelector("#remove-niveau");
   if (removeNiveauBtn) {
     removeNiveauBtn.addEventListener("click", () => {
-      console.log("Retirer un niveau");
-      // TODO: Implémenter la logique de retrait de niveau
+      if (!V.currentAC || !V.currentCompetenceId || V.currentNiveauIndex === null) {
+        console.error("Aucune AC sélectionnée");
+        return;
+      }
+
+      // Initialise level à 0 s'il n'existe pas
+      if (V.currentAC.level === undefined) {
+        V.currentAC.level = 0;
+      }
+
+      // Décrémente le niveau (ne descend pas en dessous de 0)
+      if (V.currentAC.level > 0) {
+        V.currentAC.level--;
+        console.log(`Niveau retiré ! ${V.currentAC.code} est maintenant au niveau ${V.currentAC.level}`);
+        console.log("AC mise à jour:", V.currentAC);
+      } else {
+        console.log("Le niveau est déjà à 0");
+      }
     });
   }
 };
 
 export function SVGtest() {
+  // Format pour cibler une AC dans le json/M.data
+  console.log(M.data["688548e4666873aa7a49491ba88a7271"].niveaux[0].acs[0]);
   return C.init();
 }

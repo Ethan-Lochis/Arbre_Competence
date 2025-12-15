@@ -6,6 +6,7 @@
 - **Animations**: Toutes les animations doivent utiliser GSAP
 - **Centralisation**: Regrouper les animations dans `lib/animations.js`
 - **Conventions**: Suivre les conventions de nommage du projet
+- **Nommage**: Les AC du svg sont au format "AC" + code (ex: AC1101) alors que dans le json c'est AC11.01
 
 ## Guidelines
 
