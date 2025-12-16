@@ -296,4 +296,18 @@ Animation.hideInfoPanel = function (panelElement) {
   });
 };
 
+/**
+ * Applique un zoom au SVG avec une animation fluide
+ * @param {SVGElement} svgElement - L'élément SVG à zoomer
+ * @param {number} scale - Le facteur de zoom (0.5 à 3)
+ */
+Animation.zoomSVG = function (svgElement, scale = 1) {
+  gsap.to(svgElement, {
+    scale: scale,
+    transformOrigin: "center center",
+    duration: 0.3,
+    ease: "power2.out",
+  });
+};
+
 export { Animation };
