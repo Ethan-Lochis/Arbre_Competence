@@ -4,7 +4,7 @@ import { DateHistoryView } from "@/ui/dateHistory/index.js";
 import { htmlToDOM } from "@/lib/utils.js";
 import template from "./template.html?raw";
 import { Animation } from "@/lib/animation.js";
-import jsonData from "@/data/SAE.json";
+import { pn } from "@/data/pn.js";
 import gsap from "gsap";
 
 // ============================================================================
@@ -12,7 +12,8 @@ import gsap from "gsap";
 // ============================================================================
 let M = {
   data: null,
-  levels: {}, // Stockage des niveaux uniquement { "AC11.01": 3, "AC12.05": 2, ... }
+  userData: {}, // { "AC11.01": { level: 3, dates: { 1: "...", 2: "...", 3: "..." } } }
+  acIndex: {},  // Index pour accès direct : { "AC11.01": ac_object }
   currentAC: null,
   currentCompetenceId: null,
   currentNiveauIndex: null,
@@ -29,76 +30,59 @@ let M = {
 };
 
 // Initialisation des données
-M.init =  function () {
-  M.data = jsonData;
+M.init = function () {
+  // Utilise directement pn comme source de données
+  M.data = pn;
+  M.acIndex = pn.acIndex;
 
-  // Charge les niveaux depuis localStorage
-  const savedLevels = localStorage.getItem("SAE_levels");
-  if (savedLevels) {
-    console.log("Chargement des niveaux depuis localStorage");
-    M.levels = JSON.parse(savedLevels);
+  // Charge les données utilisateur depuis localStorage
+  const savedUserData = localStorage.getItem("SAE_userData");
+  if (savedUserData) {
+    console.log("Chargement des données utilisateur depuis localStorage");
+    M.userData = JSON.parse(savedUserData);
 
-    // Applique les niveaux sauvegardés aux ACs
-    for (let competenceId in M.data) {
-      let competence = M.data[competenceId];
-      competence.niveaux?.forEach((niveau) => {
-        niveau.acs?.forEach((ac) => {
-          if (M.levels[ac.code] !== undefined) {
-            ac.level = M.levels[ac.code];
-          }
-        });
-      });
-    }
-  }
-};
-
-// Sauvegarde uniquement les niveaux et dates
-M.saveData = function () {
-  // Extrait uniquement les niveaux depuis M.data
-  M.levels = {};
-  M.dates = {};
-
-  for (let competenceId in M.data) {
-    let competence = M.data[competenceId];
-    competence.niveaux?.forEach((niveau) => {
-      niveau.acs?.forEach((ac) => {
-        if (ac.level !== undefined && ac.level > 0) {
-          M.levels[ac.code] = ac.level;
-        }
-        if (ac.dates !== undefined && Object.keys(ac.dates).length > 0) {
-          M.dates[ac.code] = ac.dates;
-        }
-      });
-    });
-  }
-
-  localStorage.setItem("SAE_levels", JSON.stringify(M.levels));
-  localStorage.setItem("SAE_dates", JSON.stringify(M.dates));
-  console.log("Niveaux sauvegardés dans localStorage:", M.levels);
-  console.log("Dates sauvegardées dans localStorage:", M.dates);
-};
-
-// Recherche d'une AC par son code pour en extraire les données associées
-M.findACByCode = function (acCode) {
-  console.log("Recherche de l'AC par code:", acCode);
-  for (let competenceId in M.data) {
-    let competence = M.data[competenceId];
-    for (
-      let niveauIndex = 0;
-      niveauIndex < (competence.niveaux?.length || 0);
-      niveauIndex++
-    ) {
-      let niveau = competence.niveaux[niveauIndex];
-      for (let ac of niveau.acs || []) {
-        if (ac.code === acCode) {
-          return {
-            ac,
-            competenceId,
-            niveauIndex,
-          };
-        }
+    // Applique les niveaux et dates sauvegardés (accès direct via index)
+    for (let acCode in M.userData) {
+      const ac = M.acIndex[acCode];
+      if (ac) {
+        const acUserData = M.userData[acCode];
+        ac.level = acUserData.level;
+        ac.dates = acUserData.dates;
       }
     }
+  }
+};
+
+// Sauvegarde les données utilisateur (niveaux et dates)
+M.saveData = function () {
+  M.userData = {};
+
+  // Parcourt l'index au lieu du JSON complet
+  for (let acCode in M.acIndex) {
+    const ac = M.acIndex[acCode];
+    // Ne sauvegarde que si l'AC a un niveau ou des dates
+    if ((ac.level !== undefined && ac.level > 0) || 
+        (ac.dates !== undefined && Object.keys(ac.dates).length > 0)) {
+      M.userData[acCode] = {
+        level: ac.level || 0,
+        dates: ac.dates || {}
+      };
+    }
+  }
+
+  localStorage.setItem("SAE_userData", JSON.stringify(M.userData));
+  console.log("Données utilisateur sauvegardées:", M.userData);
+};
+
+// Recherche d'une AC par son code (accès direct via index)
+M.findACByCode = function (acCode) {
+  const ac = M.acIndex[acCode];
+  if (ac) {
+    return {
+      ac,
+      competenceId: ac.competenceId,
+      niveauIndex: ac.niveauIndex,
+    };
   }
   return null;
 };
@@ -169,7 +153,7 @@ C.getACColor = function (acCode, level) {
 
 // Changement de couleur des AC13 en fonction du niveau pour plus de visibilité
 C.getVectorStrokeColor = function (acCode, level) {
-  // Les AC13 ont un stroke blanc aux niveaux 0 et 1, noir au-dessus
+  // Les AC Exprimer ont un stroke blanc aux niveaux 0 et 1, noir au-dessus
   if (acCode.startsWith("AC13")) {
     return level === 0 || level === 1 ? "white" : "black";
   }
@@ -491,14 +475,11 @@ V.updateACColor = function (acCode, level) {
 
 // Applique les couleurs à toutes les ACs au chargement en fonction du niveau
 V.applyAllACColors = function () {
-  for (let competenceId in M.data) {
-    let competence = M.data[competenceId];
-    competence.niveaux?.forEach((niveau) => {
-      niveau.acs?.forEach((ac) => {
-        const level = ac.level || 0;
-        V.updateACColor(ac.code, level);
-      });
-    });
+  // Parcourt directement l'index pour éviter les boucles imbriquées
+  for (let acCode in M.acIndex) {
+    const ac = M.acIndex[acCode];
+    const level = ac.level || 0;
+    V.updateACColor(ac.code, level);
   }
 };
 
