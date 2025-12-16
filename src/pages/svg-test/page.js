@@ -4,6 +4,7 @@ import { DateHistoryView } from "@/ui/dateHistory/index.js";
 import { htmlToDOM } from "@/lib/utils.js";
 import template from "./template.html?raw";
 import { Animation } from "@/lib/animation.js";
+import jsonData from "@/data/SAE.json";
 import gsap from "gsap";
 
 // ============================================================================
@@ -28,10 +29,8 @@ let M = {
 };
 
 // Initialisation des données
-M.init = async function () {
-  // Charge toujours les données complètes depuis le JSON
-  let response = await fetch("/src/data/SAE.json");
-  M.data = await response.json();
+M.init =  function () {
+  M.data = jsonData;
 
   // Charge les niveaux depuis localStorage
   const savedLevels = localStorage.getItem("SAE_levels");
@@ -150,23 +149,6 @@ M.convertACCodeToSVGId = function (acCode) {
   return acCode.replace(".", "");
 };
 
-// Obtient la variable CSS de couleur pour une AC et son niveau
-M.getACColor = function (acCode, level) {
-  // Extrait les 2 premiers chiffres après AC : AC11.01 -> "11", AC15.07 -> "15"
-  const competenceCode = acCode.substring(2, 4); // "11", "12", "13", "14", "15"
-  const safeLevel = Math.max(0, Math.min(5, level || 0)); // Clamp entre 0 et 5
-  return `var(--color-${competenceCode}-${safeLevel})`;
-};
-
-// Changement de couleur des AC13 en fonction du niveau pour plus de visibilité
-M.getVectorStrokeColor = function (acCode, level) {
-  // Les AC13 ont un stroke blanc aux niveaux 0 et 1, noir au-dessus
-  if (acCode.startsWith("AC13")) {
-    return level === 0 || level === 1 ? "white" : "black";
-  }
-  return null; // Pas de changement pour les autres compétences
-};
-
 // ============================================================================
 // CONTRÔLEUR (C) - Logique métier et handlers
 // ============================================================================
@@ -176,6 +158,24 @@ C.init = async function () {
   await M.init();
   return V.init();
 };
+
+// Obtient la variable CSS de couleur pour une AC et son niveau
+C.getACColor = function (acCode, level) {
+  // Extrait les 2 premiers chiffres après AC : AC11.01 -> "11", AC15.07 -> "15"
+  const competenceCode = acCode.substring(2, 4); // "11", "12", "13", "14", "15"
+  const safeLevel = Math.max(0, Math.min(5, level || 0)); // Clamp entre 0 et 5
+  return `var(--color-${competenceCode}-${safeLevel})`;
+};
+
+// Changement de couleur des AC13 en fonction du niveau pour plus de visibilité
+C.getVectorStrokeColor = function (acCode, level) {
+  // Les AC13 ont un stroke blanc aux niveaux 0 et 1, noir au-dessus
+  if (acCode.startsWith("AC13")) {
+    return level === 0 || level === 1 ? "white" : "black";
+  }
+  return null; // Pas de changement pour les autres compétences
+};
+
 
 C.handleACClick = function (acId, clientX, clientY) {
   const acCode = acId.replace(/^(AC\d{2})(\d{2})$/, "$1.$2");
@@ -465,14 +465,14 @@ V.updateACColor = function (acCode, level) {
     const circleBg = acGroup.querySelector('[id^="circle_bg"]');
 
     if (circleBg) {
-      const color = M.getACColor(acCode, level);
+      const color = C.getACColor(acCode, level);
       // Utilise GSAP pour une transition fluide
       Animation.transitionACColor(circleBg, color, 0.4);
     } else {
     }
 
     // Mise à jour du stroke des vectors pour les AC13
-    const vectorStroke = M.getVectorStrokeColor(acCode, level);
+    const vectorStroke = C.getVectorStrokeColor(acCode, level);
     if (vectorStroke) {
       const vectors = acGroup.querySelectorAll('[id^="Vector"]');
       // Utilise GSAP pour une transition fluide du stroke
