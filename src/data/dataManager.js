@@ -104,6 +104,128 @@ const DataManager = {
     }
     
     return false;
+  },
+
+  /**
+   * Charge les données utilisateur depuis localStorage
+   * @param {Object} acIndex - Index des ACs pour appliquer les données
+   * @returns {Object} userData chargé
+   */
+  loadUserData: function (acIndex) {
+    const savedUserData = localStorage.getItem("SAE_userData");
+    let userData = {};
+    
+    if (savedUserData) {
+      console.log("Chargement des données utilisateur depuis localStorage");
+      userData = JSON.parse(savedUserData);
+
+      // Applique les niveaux et dates sauvegardés
+      for (let acCode in userData) {
+        const ac = acIndex[acCode];
+        if (ac) {
+          const acUserData = userData[acCode];
+          ac.level = acUserData.level;
+          ac.dates = acUserData.dates;
+        }
+      }
+    }
+    
+    return userData;
+  },
+
+  /**
+   * Sauvegarde les données utilisateur dans localStorage
+   * @param {Object} acIndex - Index des ACs à sauvegarder
+   * @returns {Object} userData sauvegardé
+   */
+  saveUserData: function (acIndex) {
+    const userData = {};
+
+    // Parcourt l'index
+    for (let acCode in acIndex) {
+      const ac = acIndex[acCode];
+      // Ne sauvegarde que si l'AC a un niveau ou des dates
+      if ((ac.level !== undefined && ac.level > 0) || 
+          (ac.dates !== undefined && Object.keys(ac.dates).length > 0)) {
+        userData[acCode] = {
+          level: ac.level || 0,
+          dates: ac.dates || {}
+        };
+      }
+    }
+
+    localStorage.setItem("SAE_userData", JSON.stringify(userData));
+    console.log("Données utilisateur sauvegardées:", userData);
+    return userData;
+  },
+
+  /**
+   * Recherche une AC par son code
+   * @param {string} acCode - Code de l'AC (ex: "AC11.01")
+   * @param {Object} acIndex - Index des ACs
+   * @returns {Object|null} Objet contenant ac, competenceId, niveauIndex
+   */
+  findACByCode: function (acCode, acIndex) {
+    const ac = acIndex[acCode];
+    if (ac) {
+      return {
+        ac,
+        competenceId: ac.competenceId,
+        niveauIndex: ac.niveauIndex,
+      };
+    }
+    return null;
+  },
+
+  /**
+   * Ajoute un niveau à une AC
+   * @param {Object} ac - Objet AC
+   * @param {Object} acIndex - Index des ACs
+   * @returns {boolean} true si succès, false si niveau max atteint
+   */
+  addLevel: function (ac, acIndex) {
+    if (ac.level === undefined) {
+      ac.level = 0;
+    }
+    if (ac.level < 5) {
+      ac.level++;
+
+      // Enregistre la date d'atteinte du niveau
+      if (!ac.dates) {
+        ac.dates = {};
+      }
+      const now = new Date();
+      ac.dates[ac.level] = now.toISOString();
+
+      DataManager.saveUserData(acIndex);
+      return true;
+    }
+    return false;
+  },
+
+  /**
+   * Retire un niveau à une AC
+   * @param {Object} ac - Objet AC
+   * @param {Object} acIndex - Index des ACs
+   * @returns {boolean} true si succès, false si niveau déjà à 0
+   */
+  removeLevel: function (ac, acIndex) {
+    if (ac.level === undefined) {
+      ac.level = 0;
+    }
+    if (ac.level > 0) {
+      const previousLevel = ac.level;
+      ac.level--;
+
+      // Supprime la date du niveau retiré
+      if (ac.dates && ac.dates[previousLevel]) {
+        delete ac.dates[previousLevel];
+      }
+
+      DataManager.saveUserData(acIndex);
+      return true;
+    }
+    return false;
   }
 };
 

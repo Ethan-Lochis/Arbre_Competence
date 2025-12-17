@@ -5,6 +5,7 @@ import { htmlToDOM } from "@/lib/utils.js";
 import template from "./template.html?raw";
 import { Animation } from "@/lib/animation.js";
 import { pn } from "@/data/pn.js";
+import { DataManager } from "@/data/dataManager.js";
 import gsap from "gsap";
 
 // ============================================================================
@@ -31,101 +32,43 @@ let M = {
 
 // Initialisation des données
 M.init = function () {
-  // Utilise directement pn comme source de données
   M.data = pn;
-  M.acIndex = pn.acIndex;
-
-  // Charge les données utilisateur depuis localStorage
-  const savedUserData = localStorage.getItem("SAE_userData");
-  if (savedUserData) {
-    console.log("Chargement des données utilisateur depuis localStorage");
-    M.userData = JSON.parse(savedUserData);
-
-    // Applique les niveaux et dates sauvegardés (accès direct via index)
-    for (let acCode in M.userData) {
-      const ac = M.acIndex[acCode];
-      if (ac) {
-        const acUserData = M.userData[acCode];
-        ac.level = acUserData.level;
-        ac.dates = acUserData.dates;
-      }
-    }
+  
+  // Crée l'index localement pour accès rapide
+  M.acIndex = {};
+  for (let competence of pn) {
+    competence.niveaux?.forEach((niveau, niveauIndex) => {
+      niveau.acs?.forEach((ac) => {
+        ac.competenceId = competence.id;
+        ac.competenceNumero = competence.numero;
+        ac.niveauIndex = niveauIndex;
+        M.acIndex[ac.code] = ac;
+      });
+    });
   }
+
+  // Charge les données utilisateur 
+  M.userData = DataManager.loadUserData(M.acIndex);
 };
 
-// Sauvegarde les données utilisateur (niveaux et dates)
+// Sauvegarde les données utilisateur 
 M.saveData = function () {
-  M.userData = {};
-
-  // Parcourt l'index au lieu du JSON complet
-  for (let acCode in M.acIndex) {
-    const ac = M.acIndex[acCode];
-    // Ne sauvegarde que si l'AC a un niveau ou des dates
-    if ((ac.level !== undefined && ac.level > 0) || 
-        (ac.dates !== undefined && Object.keys(ac.dates).length > 0)) {
-      M.userData[acCode] = {
-        level: ac.level || 0,
-        dates: ac.dates || {}
-      };
-    }
-  }
-
-  localStorage.setItem("SAE_userData", JSON.stringify(M.userData));
-  console.log("Données utilisateur sauvegardées:", M.userData);
+  M.userData = DataManager.saveUserData(M.acIndex);
 };
 
-// Recherche d'une AC par son code (accès direct via index)
+// Recherche d'une AC 
 M.findACByCode = function (acCode) {
-  const ac = M.acIndex[acCode];
-  if (ac) {
-    return {
-      ac,
-      competenceId: ac.competenceId,
-      niveauIndex: ac.niveauIndex,
-    };
-  }
-  return null;
+  return DataManager.findACByCode(acCode, M.acIndex);
 };
 
-// Ajoute un niveau à une AC
+// Ajoute un niveau 
 M.addLevel = function (ac) {
-  if (ac.level === undefined) {
-    ac.level = 0;
-  }
-  if (ac.level < 5) {
-    ac.level++;
-
-    // Enregistre la date d'atteinte du niveau
-    if (!ac.dates) {
-      ac.dates = {};
-    }
-    const now = new Date();
-    ac.dates[ac.level] = now.toISOString();
-
-    M.saveData();
-    return true;
-  }
-  return false;
+  return DataManager.addLevel(ac, M.acIndex);
 };
 
-// Retire un niveau à une AC
+// Retire un niveau 
 M.removeLevel = function (ac) {
-  if (ac.level === undefined) {
-    ac.level = 0;
-  }
-  if (ac.level > 0) {
-    const previousLevel = ac.level;
-    ac.level--;
-
-    // Supprime la date du niveau retiré
-    if (ac.dates && ac.dates[previousLevel]) {
-      delete ac.dates[previousLevel];
-    }
-
-    M.saveData();
-    return true;
-  }
-  return false;
+  return DataManager.removeLevel(ac, M.acIndex);
 };
 
 // Convertit AC11.01 en AC1101
@@ -391,6 +334,19 @@ V.findACIdFromTarget = function (target, svg) {
   return null;
 };
 
+// Convertit un niveau numérique en label textuel
+V.getLevelLabel = function (level) {
+  const labels = {
+    0: "Jamais vu",
+    1: "Non acquis",
+    2: "Fragile",
+    3: "En cours d'acquisition",
+    4: "Acquis",
+    5: "Dépassé"
+  };
+  return labels[level] || "Jamais vu";
+};
+
 // Gestion des infos de l'ac
 V.showACInfo = function (ac, clientX, clientY) {
   const panel = V.rootPage.querySelector("#info-panel");
@@ -403,7 +359,8 @@ V.showACInfo = function (ac, clientX, clientY) {
     // Met à jour les informations de l'AC
     panelH3.textContent = ac.code;
     descriptionPanel.textContent = ac.libelle;
-    levelAC.textContent = ac.level !== undefined ? ac.level : 0;
+    const level = ac.level !== undefined ? ac.level : 0;
+    levelAC.textContent = V.getLevelLabel(level);
 
     // Affiche l'historique des dates
     if (datesContainer) {
@@ -423,7 +380,7 @@ V.hideACInfo = function () {
 V.updateLevel = function (level) {
   const levelAC = V.rootPage.querySelector("#info-level");
   if (levelAC) {
-    levelAC.textContent = level;
+    levelAC.textContent = V.getLevelLabel(level);
   }
 
   // Met à jour l'affichage de l'historique
@@ -467,6 +424,14 @@ V.updateACColor = function (acCode, level) {
     const competenceText = acGroup.querySelector('[id^="competence_"]');
     if (competenceText) {
       competenceText.textContent = level;
+    }
+
+    // Mise à jour de la ligne qui relie l'AC au centre
+    const acLine = acGroup.querySelector('#Ligne');
+    if (acLine) {
+      const color = C.getACColor(acCode, level);
+      // Utilise GSAP pour une transition fluide du stroke de la ligne
+      Animation.transitionStrokeColor([acLine], color, 0.4);
     }
   } else {
     // console.warn(`Groupe AC non trouvé: ${svgId}`);

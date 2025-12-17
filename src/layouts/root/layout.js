@@ -29,7 +29,39 @@ export function RootLayout() {
     // Initialiser l'animation du header après le premier render
     setTimeout(() => {
         HeaderView.init();
+        attachDropdownEvents();
     }, 0);
     
     return layout;
+}
+
+/**
+ * Gère les événements du dropdown dans le header
+ */
+function attachDropdownEvents() {
+    const dropdownBtn = document.querySelector('#demo-dropdown-btn');
+    const dropdownMenu = document.querySelector('#demo-dropdown-menu');
+    
+    if (!dropdownBtn || !dropdownMenu) return;
+    
+    // Toggle du menu au clic sur le bouton
+    dropdownBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdownMenu.classList.toggle('show');
+    });
+    
+    // Ferme le menu si on clique ailleurs
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.dropdown')) {
+            dropdownMenu.classList.remove('show');
+        }
+    });
+    
+    // Ferme le menu après avoir cliqué sur un item
+    const dropdownItems = dropdownMenu.querySelectorAll('.dropdown-item');
+    dropdownItems.forEach(item => {
+        item.addEventListener('click', () => {
+            dropdownMenu.classList.remove('show');
+        });
+    });
 }

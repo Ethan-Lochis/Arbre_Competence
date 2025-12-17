@@ -27,6 +27,27 @@ let HeaderView = {
     if (exportBtn) {
       exportBtn.addEventListener("click", DataManager.exportUserData);
     }
+
+    // Attacher l'événement d'import
+    const importBtn = document.querySelector("#import-data-btn");
+    const fileInput = document.querySelector("#import-file-input");
+    
+    if (importBtn && fileInput) {
+      // Le bouton ouvre le sélecteur de fichier
+      importBtn.addEventListener("click", () => {
+        fileInput.click();
+      });
+
+      // Quand un fichier est sélectionné, on l'importe
+      fileInput.addEventListener("change", async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          await DataManager.importUserData(file);
+          // Réinitialise l'input pour permettre de réimporter le même fichier
+          fileInput.value = "";
+        }
+      });
+    }
   }
 };
 
