@@ -16,10 +16,11 @@
 @import "./ui/history/style.css";
 @import "./ui/historyItem/style.css";
 @import "./ui/starfield/style.css";
+@import "./ui/timeline/style.css";
 
 :root {
   /* ======================================================================== */
-  /* 🌌 FOND & NEUTRES (Base sombre pour l'environnement "Jeu Vidéo") */
+  /* 🌌 FOND & NEUTRES */
   /* ======================================================================== */
   
   /* Fond : Bleu foncé très peu saturé (gardé à peu près comme l'original) */
@@ -37,7 +38,7 @@
   --color-border-accent: oklch(0.60 0.08 265); /* Bordure un peu plus vive pour la séparation */
 
   /* ======================================================================== */
-  /* 📢 SEMANTICS TOKENS (État de progression) */
+  /* 📢 SEMANTICS TOKENS */
   /* ======================================================================== */
 
   /* Progression / Principal (Peut être utilisé pour les liens ou l'état "OK") */
@@ -100,7 +101,35 @@
   --color-11-4: oklch(0.62 0.20 142.64);   /* 80% allumée */
   --color-11-5: oklch(0.6709 0.2242 142.64); /* 100% pleine intensité */
 
-
+  /* ======================================================================== */
+  /* Overlays et Effets */
+  /* ======================================================================== */
+  
+  /* Overlays semi-transparents */
+  --overlay-light-1: oklch(from var(--color-fg) l c h / 0.03);
+  --overlay-light-2: oklch(from var(--color-fg) l c h / 0.05);
+  --overlay-light-3: oklch(from var(--color-fg) l c h / 0.08);
+  --overlay-light-4: oklch(from var(--color-fg) l c h / 0.1);
+  --overlay-light-5: oklch(from var(--color-fg) l c h / 0.2);
+  --overlay-light-6: oklch(from var(--color-fg) l c h / 0.3);
+  --overlay-dark: oklch(from var(--color-bg) l c h / 0.8);
+  --overlay-bg: oklch(from var(--color-bg-panel) l c h / 0.95);
+  
+  /* Ombres */
+  --shadow-sm: 0 2px 4px oklch(from var(--color-bg) l c h / 0.3);
+  --shadow-md: 0 4px 6px oklch(from var(--color-bg) l c h / 0.3);
+  --shadow-lg: 0 4px 12px oklch(from var(--color-bg) l c h / 0.3);
+  --shadow-xl: 0 8px 24px oklch(from var(--color-bg) l c h / 0.4);
+  
+  /* Gradients pour effets visuels */
+  --gradient-primary: linear-gradient(135deg, var(--color-15-5) 0%, var(--color-14-5) 100%);
+  --gradient-shimmer: linear-gradient(135deg, var(--color-15-5) 0%, var(--color-14-5) 50%, var(--color-13-5) 100%);
+  
+  /* Backgrounds pour starfield */
+  --bg-starfield-1: var(--color-bg);
+  --bg-starfield-2: oklch(from var(--color-bg) calc(l + 0.05) c h);
+  --bg-starfield-3: oklch(from var(--color-bg) calc(l + 0.03) c h);
+  --bg-starfield: linear-gradient(to bottom, var(--bg-starfield-1) 0%, var(--bg-starfield-2) 50%, var(--bg-starfield-3) 100%);
   
 }
 

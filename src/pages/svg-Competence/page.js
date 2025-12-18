@@ -2,6 +2,7 @@ import { treeView } from "@/ui/Arbre_Competence";
 import { InfosView } from "@/ui/Infos/index.js";
 import { DateHistoryView } from "@/ui/dateHistory/index.js";
 import { HistoryView } from "@/ui/history/index.js";
+import { TimelineView } from "@/ui/timeline/index.js";
 import { htmlToDOM } from "@/lib/utils.js";
 import template from "./template.html?raw";
 import { Animation } from "@/lib/animation.js";
@@ -29,6 +30,12 @@ let M = {
     currentX: 0,
     currentY: 0,
     threshold: 5 // Distance minimale pour considérer un drag
+  },
+  // État de la timeline
+  timeline: {
+    selectedDate: null, // null = aujourd'hui (pas de filtre)
+    minDate: null,
+    maxDate: null
   }
 };
 
@@ -78,6 +85,35 @@ M.convertACCodeToSVGId = function (acCode) {
   return acCode.replace(".", "");
 };
 
+// Récupère toutes les dates de validation depuis userData
+M.getAllValidationDates = function () {
+  const dates = [];
+  const savedUserData = localStorage.getItem("SAE_userData");
+
+  if (!savedUserData) {
+    return dates;
+  }
+
+  const userData = JSON.parse(savedUserData);
+
+  for (let acCode in userData) {
+    const acData = userData[acCode];
+    if (acData.dates && Object.keys(acData.dates).length > 0) {
+      for (let level in acData.dates) {
+        const date = new Date(acData.dates[level]);
+        // Normalise à minuit pour ne comparer que les jours
+        date.setHours(0, 0, 0, 0);
+        dates.push(date);
+      }
+    }
+  }
+
+  // Trie par ordre croissant
+  dates.sort((a, b) => a - b);
+
+  return dates;
+};
+
 // ============================================================================
 // CONTRÔLEUR (C) - Logique métier et handlers
 // ============================================================================
@@ -103,6 +139,90 @@ C.getVectorStrokeColor = function (acCode, level) {
     return level === 0 || level === 1 ? "white" : "black";
   }
   return null; // Pas de changement pour les autres compétences
+};
+
+// Vérifie si une AC doit être affichée comme validée à une date donnée
+C.getFilteredLevel = function (ac, filterDate) {
+  // Si pas de filtre, retourne le niveau actuel
+  if (!filterDate) {
+    return ac.level !== undefined ? ac.level : 0;
+  }
+
+  // Si l'AC n'a pas de dates, elle n'est pas validée
+  if (!ac.dates || Object.keys(ac.dates).length === 0) {
+    return 0;
+  }
+
+  // Normalise la date du filtre à minuit pour comparer uniquement les jours
+  const filterDayOnly = new Date(filterDate);
+  filterDayOnly.setHours(0, 0, 0, 0);
+
+  // Trouve le niveau maximum validé avant ou à la date du filtre
+  let maxLevel = 0;
+  for (let level in ac.dates) {
+    const validationDate = new Date(ac.dates[level]);
+    // Normalise la date de validation à minuit
+    validationDate.setHours(0, 0, 0, 0);
+    
+    if (validationDate <= filterDayOnly) {
+      maxLevel = Math.max(maxLevel, parseInt(level));
+    }
+  }
+
+  return maxLevel;
+};
+
+// Handler pour la mise à jour de la timeline
+C.handler_timelineChange = function (dayIndex) {
+  const selectedDate = new Date(M.timeline.minDate);
+  selectedDate.setDate(selectedDate.getDate() + dayIndex);
+
+  // Stocke la date sélectionnée
+  M.timeline.selectedDate = selectedDate;
+
+  // Met à jour l'affichage des AC
+  V.updateACsForDate(selectedDate);
+  
+  return selectedDate;
+};
+
+// Handler pour l'animation du slider au clic
+C.handler_timelineClick = function (slider, clickX, sliderWidth, daysDiff, isDragging) {
+  if (!isDragging) {
+    const targetValue = Math.round((clickX / sliderWidth) * daysDiff);
+    
+    // Anime le slider avec GSAP via Animation.js
+    Animation.animateSliderValue(slider, targetValue, () => {
+      const dayIndex = parseInt(slider.value);
+      const selectedDate = C.handler_timelineChange(dayIndex);
+      V.updateTimelineDisplay(selectedDate);
+    });
+  }
+};
+
+// Initialise les données de la timeline (logique métier uniquement)
+C.initTimelineData = function () {
+  const allDates = M.getAllValidationDates();
+
+  if (allDates.length === 0) {
+    return null; // Pas de données
+  }
+
+  // Dates min et max - normalisées à minuit (00:00:00)
+  M.timeline.minDate = new Date(allDates[0]);
+  M.timeline.minDate.setHours(0, 0, 0, 0);
+  
+  M.timeline.maxDate = new Date(); // Aujourd'hui
+  M.timeline.maxDate.setHours(0, 0, 0, 0);
+
+  // Calcule le nombre de jours entre min et max
+  const daysDiff = Math.floor((M.timeline.maxDate - M.timeline.minDate) / (1000 * 60 * 60 * 24));
+  
+  return {
+    minDate: M.timeline.minDate,
+    maxDate: M.timeline.maxDate,
+    daysDiff: daysDiff
+  };
 };
 
 
@@ -235,6 +355,9 @@ V.init = function () {
   let historySlot = V.rootPage.querySelector('slot[name="history"]');
   historySlot.replaceWith(HistoryView.dom());
 
+  let timelineSlot = V.rootPage.querySelector('slot[name="timeline"]');
+  timelineSlot.replaceWith(TimelineView.dom());
+
   // Lance l'animation d'ouverture
   V.tree.openingAnimation();
 
@@ -243,6 +366,7 @@ V.init = function () {
 
   // Attache les événements
   V.attachEvents();
+  
   return V.rootPage;
 };
 
@@ -302,6 +426,9 @@ V.attachEvents = function () {
 
   // Boutons de l'historique
   V.attachHistoryEvents();
+  
+  // Timeline
+  V.initTimeline();
 };
 
 V.attachHistoryEvents = function () {
@@ -488,9 +615,128 @@ V.applyAllACColors = function () {
   // Parcourt directement l'index pour éviter les boucles imbriquées
   for (let acCode in M.acIndex) {
     const ac = M.acIndex[acCode];
-    const level = ac.level || 0;
+    // Utilise le filtre temporel de la timeline
+    const level = C.getFilteredLevel(ac, M.timeline.selectedDate);
     V.updateACColor(ac.code, level);
   }
+};
+
+// Met à jour l'affichage des AC selon la date sélectionnée dans la timeline
+V.updateACsForDate = function (selectedDate) {
+  // Parcourt tous les AC et applique le filtre temporel
+  for (let acCode in M.acIndex) {
+    const ac = M.acIndex[acCode];
+    const level = C.getFilteredLevel(ac, selectedDate);
+    V.updateACColor(acCode, level);
+  }
+};
+
+// Met à jour l'affichage de la date dans la timeline
+V.updateTimelineDisplay = function (selectedDate) {
+  const dateDisplay = V.rootPage.querySelector("#timeline-date-display");
+  if (dateDisplay) {
+    dateDisplay.textContent = selectedDate.toLocaleDateString("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric"
+    });
+  }
+};
+
+// Initialise la timeline après le montage du DOM
+V.initTimeline = function () {
+  setTimeout(() => {
+    const slider = V.rootPage.querySelector("#timeline-slider");
+    const dateDisplay = V.rootPage.querySelector("#timeline-date-display");
+    const startDateLabel = V.rootPage.querySelector("#timeline-start-date");
+    const endDateLabel = V.rootPage.querySelector("#timeline-end-date");
+
+    if (!slider || !dateDisplay || !startDateLabel || !endDateLabel) {
+      console.error("Timeline: éléments DOM manquants");
+      return;
+    }
+
+    const timelineData = C.initTimelineData();
+
+    if (!timelineData) {
+      // Aucune donnée : on désactive le slider
+      dateDisplay.textContent = "Aucune donnée";
+      startDateLabel.textContent = "--/--/----";
+      endDateLabel.textContent = "--/--/----";
+      slider.disabled = true;
+      
+      // On affiche tout par défaut (date = null)
+      M.timeline.selectedDate = null;
+      V.updateACsForDate(null);
+      return;
+    }
+
+    // Active le slider
+    slider.disabled = false;
+
+    // Configure le slider pour avoir un step par jour
+    slider.min = 0;
+    slider.max = timelineData.daysDiff;
+    slider.step = 1;
+
+    // Affiche les dates de début et fin
+    startDateLabel.textContent = timelineData.minDate.toLocaleDateString("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric"
+    });
+
+    endDateLabel.textContent = timelineData.maxDate.toLocaleDateString("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric"
+    });
+
+    // Attache les événements
+    V.attachTimelineEvents(slider, timelineData.daysDiff);
+
+    // Initialisation à aujourd'hui (dernier jour)
+    slider.value = timelineData.daysDiff;
+    M.timeline.selectedDate = null;
+    const selectedDate = C.handler_timelineChange(timelineData.daysDiff);
+    V.updateTimelineDisplay(selectedDate);
+  }, 0);
+};
+
+// Attache les événements de la timeline
+V.attachTimelineEvents = function (slider, daysDiff) {
+  let isDragging = false;
+
+  // Handler pour la mise à jour lors du changement
+  const onTimelineInput = () => {
+    const dayIndex = parseInt(slider.value);
+    const selectedDate = C.handler_timelineChange(dayIndex);
+    V.updateTimelineDisplay(selectedDate);
+  };
+
+  // Handler pour le début du drag
+  const onMouseDown = () => {
+    isDragging = true;
+  };
+
+  // Handler pour la fin du drag
+  const onMouseUp = () => {
+    isDragging = false;
+  };
+
+  // Handler pour les clics (animation)
+  const onSliderClick = (e) => {
+    const rect = slider.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const sliderWidth = rect.width;
+    C.handler_timelineClick(slider, clickX, sliderWidth, daysDiff, isDragging);
+  };
+
+  // Attache les événements
+  slider.addEventListener("input", onTimelineInput);
+  slider.addEventListener("mousedown", onMouseDown);
+  slider.addEventListener("mouseup", onMouseUp);
+  slider.addEventListener("click", onSliderClick);
 };
 
 export function SVG_Competence() {

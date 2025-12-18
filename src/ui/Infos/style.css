@@ -1,10 +1,10 @@
 .info-panel {
   display: none;
   position: fixed;
-  background: white;
+  background: var(--color-fg);
   padding: 1.25rem;
   border-radius: .5rem;
-  box-shadow: 0 .25rem .375rem rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   width: 25rem;
   z-index: 1000;
   opacity: 0;

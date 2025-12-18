@@ -348,4 +348,20 @@ Animation.driftStar = function (starElement, delay = 0, duration = 15) {
   });
 };
 
+/**
+ * Anime la valeur d'un slider avec une fonction de callback
+ * @param {HTMLInputElement} slider - L'élément slider à animer
+ * @param {number} targetValue - La valeur cible du slider
+ * @param {Function} onUpdate - Fonction appelée à chaque update de l'animation
+ * @param {number} duration - Durée de l'animation en secondes
+ */
+Animation.animateSliderValue = function (slider, targetValue, onUpdate, duration = 0.5) {
+  gsap.to(slider, {
+    value: targetValue,
+    duration: duration,
+    ease: "power2.out",
+    onUpdate: onUpdate
+  });
+};
+
 export { Animation };

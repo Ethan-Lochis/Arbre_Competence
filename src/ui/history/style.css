@@ -1,7 +1,7 @@
 /* Bouton flottant en bas à gauche */
 .history-toggle-btn {
   position: fixed;
-  bottom: 2rem;
+  bottom: 150px;
   left: 2rem;
   width: 60px;
   height: 60px;
@@ -14,7 +14,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-lg);
   transition: all 0.3s ease;
   z-index: 999;
   backdrop-filter: blur(10px);
@@ -22,8 +22,8 @@
 
 .history-toggle-btn:hover {
   transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-  background: rgba(255, 255, 255, 0.1);
+  box-shadow: var(--shadow-xl);
+  background: var(--overlay-light-4);
 }
 
 .history-toggle-btn:active {
@@ -40,7 +40,7 @@
   background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-xl);
   z-index: 1000;
   display: none;
   flex-direction: column;
@@ -58,7 +58,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--overlay-light-1);
 }
 
 .history-header h3 {
@@ -85,7 +85,7 @@
 }
 
 .close-history-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--overlay-light-4);
   transform: rotate(90deg);
 }
 
@@ -94,7 +94,7 @@
   border-bottom: 1px solid var(--color-border);
   display: flex;
   gap: 1.5rem;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--overlay-light-1);
 }
 
 .history-controls label {
@@ -108,7 +108,7 @@
 }
 
 .history-controls label:hover {
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--color-fg);
 }
 
 .history-controls input[type="radio"] {
@@ -125,7 +125,7 @@
 .history-empty {
   text-align: center;
   padding: 3rem 1rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-fg-secondary);
   font-size: 0.875rem;
 }
 
@@ -142,17 +142,17 @@
 }
 
 .history-content::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--overlay-light-2);
   border-radius: 4px;
 }
 
 .history-content::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--overlay-light-5);
   border-radius: 4px;
 }
 
 .history-content::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--overlay-light-6);
 }
 
 /* Responsive */

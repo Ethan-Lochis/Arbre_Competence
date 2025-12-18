@@ -31,11 +31,11 @@
 
 .mmi{
     font-weight: bold;
-    color: #f093fb ;
+    color: var(--color-13-5);
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  background: var(--gradient-shimmer);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -53,7 +53,7 @@
 
 .accueil-subtitle {
   font-size: 1.25rem;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--color-fg);
   max-width: 600px;
   margin: 0 auto;
   line-height: 1.6;
@@ -68,8 +68,8 @@
 }
 
 .feature-card {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--overlay-light-2);
+  border: 1px solid var(--overlay-light-4);
   border-radius: 16px;
   padding: 2rem;
   transition: all 0.3s ease;
@@ -77,10 +77,10 @@
 }
 
 .feature-card:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--overlay-light-3);
+  border-color: var(--overlay-light-5);
   transform: translateY(-8px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-lg);
 }
 
 .feature-icon {
@@ -97,7 +97,7 @@
 
 .feature-card p {
   font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-fg-secondary);
   margin: 0;
   line-height: 1.6;
 }
@@ -111,20 +111,20 @@
   padding: 1rem 2.5rem;
   font-size: 1.125rem;
   font-weight: 600;
-  color: white;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: var(--color-fg);
+  background: var(--gradient-primary);
   border: none;
   border-radius: 12px;
   text-decoration: none;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 15px oklch(from var(--color-15-5) l c h / 0.4);
   cursor: pointer;
 }
 
 .btn-primary:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  box-shadow: 0 8px 25px oklch(from var(--color-15-5) l c h / 0.6);
+  background: linear-gradient(135deg, var(--color-14-5) 0%, var(--color-15-5) 100%);
 }
 
 .btn-primary:active {
