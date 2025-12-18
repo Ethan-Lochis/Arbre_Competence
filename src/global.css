@@ -4,6 +4,7 @@
 /* import des styles des pages */
 @import "./pages/svg-demo1/style.css";
 @import "./pages/svg-Competence/style.css";
+@import "./pages/Accueil/style.css";
 
 /* import des styles des composants UI */
 @import "./ui/header/style.css";

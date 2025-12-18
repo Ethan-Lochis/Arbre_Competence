@@ -3,6 +3,7 @@ import { Router } from "./lib/router.js";
 
 import { RootLayout } from "./layouts/root/layout.js";
 import { The404Page } from "./pages/404/page.js";
+import { AccueilPage } from "./pages/Accueil/page.js";
 import { SvgDemo1Page } from "./pages/svg-demo1/page.js";
 import { SvgDemo2Page } from "./pages/svg-demo2/page.js";
 import { SvgDemo3Page } from "./pages/svg-demo3/page.js";
@@ -17,7 +18,7 @@ const router = new Router("app");
 router.addLayout("/", RootLayout);
 
 
-router.addRoute("/", SvgDemo1Page);
+router.addRoute("/", AccueilPage);
 router.addRoute("/svg-demo1", SvgDemo1Page);
 
 router.addRoute("/svg-demo2", SvgDemo2Page);
