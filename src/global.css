@@ -106,29 +106,29 @@
   /* ======================================================================== */
   
   /* Overlays semi-transparents */
-  --overlay-light-1: oklch(from var(--color-fg) l c h / 0.03);
-  --overlay-light-2: oklch(from var(--color-fg) l c h / 0.05);
-  --overlay-light-3: oklch(from var(--color-fg) l c h / 0.08);
-  --overlay-light-4: oklch(from var(--color-fg) l c h / 0.1);
-  --overlay-light-5: oklch(from var(--color-fg) l c h / 0.2);
-  --overlay-light-6: oklch(from var(--color-fg) l c h / 0.3);
-  --overlay-dark: oklch(from var(--color-bg) l c h / 0.8);
-  --overlay-bg: oklch(from var(--color-bg-panel) l c h / 0.95);
+  --overlay-light-1: oklch(0.95 0.02 265 / 0.03);
+  --overlay-light-2: oklch(0.95 0.02 265 / 0.05);
+  --overlay-light-3: oklch(0.95 0.02 265 / 0.08);
+  --overlay-light-4: oklch(0.95 0.02 265 / 0.1);
+  --overlay-light-5: oklch(0.95 0.02 265 / 0.2);
+  --overlay-light-6: oklch(0.95 0.02 265 / 0.3);
+  --overlay-dark: oklch(0.255 0.1445 262.28 / 0.8);
+  --overlay-bg: oklch(0.18602 0.09268 262.898 / 0.95);
   
   /* Ombres */
-  --shadow-sm: 0 2px 4px oklch(from var(--color-bg) l c h / 0.3);
-  --shadow-md: 0 4px 6px oklch(from var(--color-bg) l c h / 0.3);
-  --shadow-lg: 0 4px 12px oklch(from var(--color-bg) l c h / 0.3);
-  --shadow-xl: 0 8px 24px oklch(from var(--color-bg) l c h / 0.4);
+  --shadow-sm: 0 2px 4px oklch(0.255 0.1445 262.28 / 0.3);
+  --shadow-md: 0 4px 6px oklch(0.255 0.1445 262.28 / 0.3);
+  --shadow-lg: 0 4px 12px oklch(0.255 0.1445 262.28 / 0.3);
+  --shadow-xl: 0 8px 24px oklch(0.255 0.1445 262.28 / 0.4);
   
   /* Gradients pour effets visuels */
   --gradient-primary: linear-gradient(135deg, var(--color-15-5) 0%, var(--color-14-5) 100%);
   --gradient-shimmer: linear-gradient(135deg, var(--color-15-5) 0%, var(--color-14-5) 50%, var(--color-13-5) 100%);
   
   /* Backgrounds pour starfield */
-  --bg-starfield-1: var(--color-bg);
-  --bg-starfield-2: oklch(from var(--color-bg) calc(l + 0.05) c h);
-  --bg-starfield-3: oklch(from var(--color-bg) calc(l + 0.03) c h);
+  --bg-starfield-1: oklch(0.18 0.1445 262.28);
+  --bg-starfield-2: oklch(0.22 0.1445 262.28);
+  --bg-starfield-3: oklch(0.20 0.1445 262.28);
   --bg-starfield: linear-gradient(to bottom, var(--bg-starfield-1) 0%, var(--bg-starfield-2) 50%, var(--bg-starfield-3) 100%);
   
 }

@@ -86,6 +86,7 @@
 
 .close-history-btn:hover {
   background: var(--overlay-light-4);
+  color: var(--color-remove);
   transform: rotate(90deg);
 }
 

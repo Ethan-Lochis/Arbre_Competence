@@ -176,12 +176,7 @@ C.getFilteredLevel = function (ac, filterDate) {
 C.handler_timelineChange = function (dayIndex) {
   const selectedDate = new Date(M.timeline.minDate);
   selectedDate.setDate(selectedDate.getDate() + dayIndex);
-
-  // Stocke la date sélectionnée
   M.timeline.selectedDate = selectedDate;
-
-  // Met à jour l'affichage des AC
-  V.updateACsForDate(selectedDate);
   
   return selectedDate;
 };
@@ -196,6 +191,7 @@ C.handler_timelineClick = function (slider, clickX, sliderWidth, daysDiff, isDra
       const dayIndex = parseInt(slider.value);
       const selectedDate = C.handler_timelineChange(dayIndex);
       V.updateTimelineDisplay(selectedDate);
+      V.updateAllACColors(selectedDate);
     });
   }
 };
@@ -362,7 +358,7 @@ V.init = function () {
   V.tree.openingAnimation();
 
   // Applique les couleurs en fonction des niveaux
-  V.applyAllACColors();
+  V.updateAllACColors();
 
   // Attache les événements
   V.attachEvents();
@@ -550,6 +546,9 @@ V.hideACInfo = function () {
 };
 
 V.updateLevel = function (level) {
+  if (!M.currentAC) return;
+
+  // Met à jour le label du niveau
   const levelAC = V.rootPage.querySelector("#info-level");
   if (levelAC) {
     levelAC.textContent = V.getLevelLabel(level);
@@ -557,15 +556,13 @@ V.updateLevel = function (level) {
 
   // Met à jour l'affichage de l'historique
   const datesContainer = V.rootPage.querySelector("#info-dates");
-  if (datesContainer && M.currentAC) {
+  if (datesContainer) {
     datesContainer.innerHTML = "";
     datesContainer.appendChild(DateHistoryView.dom(M.currentAC));
   }
 
-  // Met à jour la couleur du Circle_bg
-  if (M.currentAC) {
-    V.updateACColor(M.currentAC.code, level);
-  }
+  // Met à jour la couleur de l'AC dans le SVG
+  V.updateACColor(M.currentAC.code, level);
 };
 
 // Met à jour la couleur du fond de l'AC dans le SVG
@@ -610,23 +607,12 @@ V.updateACColor = function (acCode, level) {
   }
 };
 
-// Applique les couleurs à toutes les ACs au chargement en fonction du niveau
-V.applyAllACColors = function () {
-  // Parcourt directement l'index pour éviter les boucles imbriquées
+// Met à jour la couleur de toutes les ACs selon un filtre de date
+// Si filterDate est null, affiche l'état actuel sans filtre
+V.updateAllACColors = function (filterDate = M.timeline.selectedDate) {
   for (let acCode in M.acIndex) {
     const ac = M.acIndex[acCode];
-    // Utilise le filtre temporel de la timeline
-    const level = C.getFilteredLevel(ac, M.timeline.selectedDate);
-    V.updateACColor(ac.code, level);
-  }
-};
-
-// Met à jour l'affichage des AC selon la date sélectionnée dans la timeline
-V.updateACsForDate = function (selectedDate) {
-  // Parcourt tous les AC et applique le filtre temporel
-  for (let acCode in M.acIndex) {
-    const ac = M.acIndex[acCode];
-    const level = C.getFilteredLevel(ac, selectedDate);
+    const level = C.getFilteredLevel(ac, filterDate);
     V.updateACColor(acCode, level);
   }
 };
@@ -667,7 +653,7 @@ V.initTimeline = function () {
       
       // On affiche tout par défaut (date = null)
       M.timeline.selectedDate = null;
-      V.updateACsForDate(null);
+      V.updateAllACColors(null);
       return;
     }
 
@@ -712,6 +698,7 @@ V.attachTimelineEvents = function (slider, daysDiff) {
     const dayIndex = parseInt(slider.value);
     const selectedDate = C.handler_timelineChange(dayIndex);
     V.updateTimelineDisplay(selectedDate);
+    V.updateAllACColors(selectedDate);
   };
 
   // Handler pour le début du drag

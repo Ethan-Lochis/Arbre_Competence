@@ -161,7 +161,7 @@
 }
 
 #close-info:hover {
-  color: var(--color-fg);
+  color: var(--color-remove);
 }
 
 /* Contrôles de niveau */
