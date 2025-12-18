@@ -8,6 +8,7 @@ import { pn } from "@/data/pn.js";
 import { DataManager } from "@/data/dataManager.js";
 import gsap from "gsap";
 
+
 // ============================================================================
 // MODÈLE (M) - Gestion des données
 // ============================================================================
@@ -448,6 +449,6 @@ V.applyAllACColors = function () {
   }
 };
 
-export function SVGtest() {
+export function SVG_Competence() {
   return C.init();
 }

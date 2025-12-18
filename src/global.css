@@ -3,7 +3,7 @@
 
 /* import des styles des pages */
 @import "./pages/svg-demo1/style.css";
-@import "./pages/svg-test/style.css";
+@import "./pages/svg-Competence/style.css";
 
 /* import des styles des composants UI */
 @import "./ui/header/style.css";
@@ -11,7 +11,7 @@
 @import "./ui/spinner/style.css";
 @import "./ui/star/style.css";
 @import "./ui/Infos/style.css";
-@import "./ui/Test/style.css";
+@import "./ui/Arbre_Competence/style.css";
 
 :root {
   /* ======================================================================== */

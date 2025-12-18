@@ -48,6 +48,12 @@ let HeaderView = {
         }
       });
     }
+
+    // Attacher l'événement de réinitialisation
+    const resetBtn = document.querySelector("#reset-data-btn");
+    if (resetBtn) {
+      resetBtn.addEventListener("click", DataManager.resetUserData);
+    }
   }
 };
 

@@ -68,7 +68,8 @@ const DataManager = {
           localStorage.setItem("SAE_userData", JSON.stringify(importData.userData));
           
           console.log("✅ Données importées avec succès");
-          alert("Données importées ! Rechargez la page pour voir les changements.");
+          alert("Données importées ! La page va se recharger.");
+          window.location.reload();
           resolve(true);
         } catch (error) {
           console.error("❌ Erreur lors de l'import:", error);
@@ -99,7 +100,7 @@ const DataManager = {
     if (confirm) {
       localStorage.removeItem("SAE_userData");
       console.log("✅ Données supprimées");
-      alert("Données supprimées ! Rechargez la page.");
+      window.location.reload();
       return true;
     }
     
@@ -141,10 +142,9 @@ const DataManager = {
   saveUserData: function (acIndex) {
     const userData = {};
 
-    // Parcourt l'index
+    // Parcourt l'index pour verifier si l'ac a un niveau et ou une date
     for (let acCode in acIndex) {
       const ac = acIndex[acCode];
-      // Ne sauvegarde que si l'AC a un niveau ou des dates
       if ((ac.level !== undefined && ac.level > 0) || 
           (ac.dates !== undefined && Object.keys(ac.dates).length > 0)) {
         userData[acCode] = {
