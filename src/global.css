@@ -12,6 +12,9 @@
 @import "./ui/star/style.css";
 @import "./ui/Infos/style.css";
 @import "./ui/Arbre_Competence/style.css";
+@import "./ui/history/style.css";
+@import "./ui/historyItem/style.css";
+@import "./ui/starfield/style.css";
 
 :root {
   /* ======================================================================== */

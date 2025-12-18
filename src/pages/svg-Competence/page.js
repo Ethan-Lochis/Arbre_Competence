@@ -1,6 +1,7 @@
 import { treeView } from "@/ui/Arbre_Competence";
 import { InfosView } from "@/ui/Infos/index.js";
 import { DateHistoryView } from "@/ui/dateHistory/index.js";
+import { HistoryView } from "@/ui/history/index.js";
 import { htmlToDOM } from "@/lib/utils.js";
 import template from "./template.html?raw";
 import { Animation } from "@/lib/animation.js";
@@ -231,6 +232,9 @@ V.init = function () {
   let infoPanel = V.rootPage.querySelector('slot[name="info"]');
   infoPanel.replaceWith(V.infoPanel.dom());
 
+  let historySlot = V.rootPage.querySelector('slot[name="history"]');
+  historySlot.replaceWith(HistoryView.dom());
+
   // Lance l'animation d'ouverture
   V.tree.openingAnimation();
 
@@ -295,6 +299,46 @@ V.attachEvents = function () {
 
   // Système de drag pour déplacer le SVG quand il est zoomé
   V.attachDragEvents(zoomWrapper);
+
+  // Boutons de l'historique
+  V.attachHistoryEvents();
+};
+
+V.attachHistoryEvents = function () {
+  const toggleBtn = V.rootPage.querySelector("#history-toggle-btn");
+  const historyPanel = V.rootPage.querySelector("#history-panel");
+  const closeBtn = V.rootPage.querySelector("#close-history");
+  const historyContent = V.rootPage.querySelector("#history-content");
+  const sortRadios = V.rootPage.querySelectorAll('input[name="history-sort"]');
+
+  if (!toggleBtn || !historyPanel || !closeBtn || !historyContent) return;
+
+  // Fonction pour régénérer le contenu
+  const updateHistoryContent = () => {
+    const selectedSort = V.rootPage.querySelector('input[name="history-sort"]:checked');
+    const sortMode = selectedSort ? selectedSort.value : "date";
+    
+    historyContent.innerHTML = '';
+    historyContent.appendChild(HistoryView.generateHistoryContent(M.acIndex, sortMode));
+  };
+
+  // Ouvre/ferme le panel
+  toggleBtn.addEventListener("click", () => {
+    const isShown = historyPanel.classList.toggle("show");
+    if (isShown) {
+      updateHistoryContent();
+    }
+  });
+
+  // Ferme le panel
+  closeBtn.addEventListener("click", () => {
+    historyPanel.classList.remove("show");
+  });
+
+  // Écoute les changements de tri
+  sortRadios.forEach(radio => {
+    radio.addEventListener("change", updateHistoryContent);
+  });
 };
 
 V.attachDragEvents = function (zoomWrapper) {

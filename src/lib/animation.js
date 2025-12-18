@@ -310,4 +310,42 @@ Animation.zoomSVG = function (svgElement, scale = 1) {
   });
 };
 
+/**
+ * Anime le scintillement d'une étoile
+ * @param {HTMLElement} starElement - L'élément étoile à animer
+ * @param {number} delay - Délai avant le début de l'animation
+ * @param {number} duration - Durée d'une boucle d'animation
+ */
+Animation.twinkleStar = function (starElement, delay = 0, duration = 3) {
+  gsap.to(starElement, {
+    opacity: 0.2 + Math.random() * 0.3,
+    duration: duration,
+    repeat: -1,
+    yoyo: true,
+    ease: "power1.inOut",
+    delay: delay
+  });
+};
+
+/**
+ * Anime le mouvement léger d'une étoile
+ * @param {HTMLElement} starElement - L'élément étoile à animer
+ * @param {number} delay - Délai avant le début de l'animation
+ * @param {number} duration - Durée d'une boucle d'animation
+ */
+Animation.driftStar = function (starElement, delay = 0, duration = 15) {
+  const xOffset = -10 + Math.random() * 20;
+  const yOffset = -10 + Math.random() * 20;
+  
+  gsap.to(starElement, {
+    x: xOffset,
+    y: yOffset,
+    duration: duration,
+    repeat: -1,
+    yoyo: true,
+    ease: "sine.inOut",
+    delay: delay
+  });
+};
+
 export { Animation };

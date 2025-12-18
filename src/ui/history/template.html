@@ -1,0 +1,25 @@
+<div class="history-container">
+  <button id="history-toggle-btn" class="history-toggle-btn" title="Afficher l'historique">
+    📜
+  </button>
+
+  <div id="history-panel" class="history-panel">
+    <div class="history-header">
+      <h3>📜 Historique des modifications</h3>
+      <button id="close-history" class="close-history-btn">✕</button>
+    </div>
+    <div class="history-controls">
+      <label>
+        <input type="radio" name="history-sort" value="date" checked />
+        Par date
+      </label>
+      <label>
+        <input type="radio" name="history-sort" value="ac" />
+        Par AC
+      </label>
+    </div>
+    <div id="history-content" class="history-content">
+      <!-- Le contenu sera généré dynamiquement -->
+    </div>
+  </div>
+</div>

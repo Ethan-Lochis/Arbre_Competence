@@ -2,6 +2,7 @@ import template from "./template.html?raw";
 import { htmlToDOM } from "@/lib/utils.js";
 import { HeaderView } from "@/ui/header/index.js";
 import { FooterView } from "@/ui/footer/index.js";
+import { StarfieldView } from "@/ui/starfield/index.js";
 
 
 
@@ -15,21 +16,27 @@ import { FooterView } from "@/ui/footer/index.js";
  * - Crée un fragment DOM à partir du template HTML.
  * - Génère le DOM de l'en-tête via HeaderView.dom().
  * - Génère le DOM du pied de page via FooterView.dom().
+ * - Génère le fond étoilé via StarfieldView.dom().
  * - Remplace le slot nommé "header" par le DOM de l'en-tête.
  * - Remplace le slot nommé "footer" par le DOM du pied de page.
+ * - Remplace le slot nommé "starfield" par le DOM du ciel étoilé.
  * - Retourne le fragment DOM finalisé.
  */
 export function RootLayout() {
     let layout = htmlToDOM(template);
     let header = HeaderView.dom();
     let footer = FooterView.dom();
+    let starfield = StarfieldView.dom();
+    
     layout.querySelector('slot[name="header"]').replaceWith(header);
     layout.querySelector('slot[name="footer"]').replaceWith(footer);
+    layout.querySelector('slot[name="starfield"]').replaceWith(starfield);
     
     // Initialiser l'animation du header après le premier render
     setTimeout(() => {
         HeaderView.init();
         attachDropdownEvents();
+        StarfieldView.init(); // Initialise le ciel étoilé
     }, 0);
     
     return layout;
