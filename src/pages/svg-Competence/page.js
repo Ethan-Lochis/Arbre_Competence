@@ -132,10 +132,10 @@ C.getACColor = function (acCode, level) {
   return `var(--color-${competenceCode}-${safeLevel})`;
 };
 
-// Changement de couleur des AC13 en fonction du niveau pour plus de visibilité
+// Changement de couleur des AC13/23/33 (Exprimer) en fonction du niveau pour plus de visibilité
 C.getVectorStrokeColor = function (acCode, level) {
   // Les AC Exprimer ont un stroke blanc aux niveaux 0 et 1, noir au-dessus
-  if (acCode.startsWith("AC13")) {
+  if (acCode.startsWith("AC13") || acCode.startsWith("AC23") || acCode.startsWith("AC33")) {
     return level === 0 || level === 1 ? "white" : "black";
   }
   return null; // Pas de changement pour les autres compétences
@@ -375,13 +375,18 @@ V.attachEvents = function () {
 
   // Event delegation sur le SVG
   svg.addEventListener("click", (ev) => {
+    console.log("🖱️ Clic détecté sur:", ev.target);
+    console.log("  - Tag:", ev.target.tagName);
+    console.log("  - ID:", ev.target.id);
+    console.log("  - Classe:", ev.target.className);
 
     const acId = V.findACIdFromTarget(ev.target, svg);
 
     if (acId) {
+      console.log("✅ AC trouvée:", acId);
       C.handleACClick(acId, ev.clientX, ev.clientY);
     } else {
-      console.log("Clic en dehors d'une AC");
+      console.log("❌ Clic en dehors d'une AC");
     }
   });
 
@@ -485,20 +490,29 @@ V.attachDragEvents = function (zoomWrapper) {
 V.findACIdFromTarget = function (target, svg) {
   let currentElement = target;
   let depth = 0;
+  console.log("🔍 Recherche AC depuis:", target.tagName, target.id || "(sans id)");
 
   while (currentElement && currentElement !== svg) {
+    console.log(`  Niveau ${depth}: <${currentElement.tagName}> id="${currentElement.id || ''}">`);
+    
     if (currentElement.id && currentElement.id.startsWith("AC")) {
       // Extrait uniquement la partie AC + 4 chiffres (ex: AC1106 depuis AC1106__Content)
       const match = currentElement.id.match(/^(AC\d{4})/);
       if (match) {
+        console.log("  ✅ AC trouvée:", match[1]);
         return match[1];
       }
     }
     currentElement = currentElement.parentElement;
     depth++;
+    
+    if (depth > 20) {
+      console.log("  ⚠️ Profondeur maximale atteinte");
+      break;
+    }
   }
 
-  console.log("  ✗ Aucune AC trouvée");
+  console.log("  ✗ Aucune AC trouvée après", depth, "niveaux");
   return null;
 };
 
@@ -579,6 +593,18 @@ V.updateACColor = function (acCode, level) {
       // Utilise GSAP pour une transition fluide
       Animation.transitionACColor(circleBg, color, 0.4);
     } else {
+      // Essaie aussi de chercher un path ou circle avec fill
+      const pathWithFill = acGroup.querySelector('path[fill^="#"]');
+      const circleWithFill = acGroup.querySelector('circle[fill^="#"]');
+      const bgElement = pathWithFill || circleWithFill;
+      
+      if (bgElement) {
+        console.warn(`⚠️ AC ${acCode}: circle_bg non trouvé, utilisation de ${bgElement.tagName}#${bgElement.id}`);
+        const color = C.getACColor(acCode, level);
+        Animation.transitionACColor(bgElement, color, 0.4);
+      } else {
+        console.error(`❌ AC ${acCode}: Aucun élément de fond trouvé!`);
+      }
     }
 
     // Mise à jour du stroke des vectors pour les AC13
@@ -596,7 +622,7 @@ V.updateACColor = function (acCode, level) {
     }
 
     // Mise à jour de la ligne qui relie l'AC au centre
-    const acLine = acGroup.querySelector('#Ligne');
+    const acLine = acGroup.querySelector('[id^="Ligne"]');
     if (acLine) {
       const color = C.getACColor(acCode, level);
       // Utilise GSAP pour une transition fluide du stroke de la ligne

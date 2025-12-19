@@ -1,5 +1,5 @@
 import { htmlToDOM } from "../../lib/utils.js";
-import template from "./Template_Arbre.html?raw";
+import template from "./Template_Arbre1.html?raw";
 import { Animation } from "../../lib/animation.js";
 
 class treeView {
